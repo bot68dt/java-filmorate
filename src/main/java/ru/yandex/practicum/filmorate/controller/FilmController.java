@@ -69,11 +69,11 @@ public class FilmController {
             if (newFilm.getName() == null || newFilm.getName().isBlank()) {
                 log.error("Exception", new ConditionsNotMetException("Название не может быть пустым"));
                 throw new ConditionsNotMetException("Название не может быть пустым");
-            } else oldFilm.setName(oldFilm.getName());
+            } else oldFilm.setName(newFilm.getName());
             if (newFilm.getDescription().length() > 200 && newFilm.getDescription().contains(" ")) {
                 log.error("Exception", new ConditionsNotMetException("Максимальная длина описания — 200 символов"));
                 throw new ConditionsNotMetException("Максимальная длина описания — 200 символов");
-            } else oldFilm.setName(newFilm.getName());
+            } else oldFilm.setName(newFilm.getDescription());
             if (newFilm.getReleaseDate().isBefore(ChronoLocalDate.from(LocalDateTime.of(1895, 12, 28, 00, 00, 00)))) {
                 log.error("Exception", new ConditionsNotMetException("Дата релиза — не раньше 28 декабря 1895 года"));
                 throw new ConditionsNotMetException("Дата релиза — не раньше 28 декабря 1895 года");
