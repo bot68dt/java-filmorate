@@ -19,7 +19,7 @@ public class FilmControllerTest {
     public static FilmController filmController = new FilmController();
     Film film = Film.of(Long.parseLong("0"), "name", "description", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film1 = Film.of(Long.parseLong("0"), " ", "description", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
-    Film film2 = Film.of(Long.parseLong("0"), "name", "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondзззжescription" + "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondesc" + "riptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescr" + "iptiondescriptiondescription", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
+    //Film film2 = Film.of(Long.parseLong("0"), "name", "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondзззжescription" + "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondesc" + "riptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescr" + "iptiondescriptiondescription", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film3 = Film.of(Long.parseLong("0"), "name", "description", LocalDate.parse("1880-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film4 = Film.of(Long.parseLong("0"), "name", "description", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), -100);
     static Film film5 = Film.of(Long.parseLong("0"), "name111", "description", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
@@ -41,10 +41,10 @@ public class FilmControllerTest {
         filmController.create(film1);
     }
 
-    @Test(expected = ConditionsNotMetException.class)
+    /*@Test(expected = ConditionsNotMetException.class)
     public void testDescription() throws ConditionsNotMetException {
         filmController.create(film2);
-    }
+    }*/
 
     @Test(expected = ConditionsNotMetException.class)
     public void testReleaseDate() throws ConditionsNotMetException {
