@@ -17,14 +17,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class FilmControllerTest {
 
     public static FilmController filmController = new FilmController();
-    Film film = Film.of(Long.parseLong("0"), "name", "description", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")), 100);
-    Film film1 = Film.of(Long.parseLong("0"), " ", "description", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")), 100);
-    Film film2 = Film.of(Long.parseLong("0"), "name", "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondзззжescription" + "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondesc" + "riptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescr" + "iptiondescriptiondescription", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")), 100);
-    Film film3 = Film.of(Long.parseLong("0"), "name", "description", LocalDate.parse("19.04.1890", DateTimeFormatter.ofPattern("dd.MM.yyyy")), 100);
-    Film film4 = Film.of(Long.parseLong("0"), "name", "description", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")), -100);
-    static Film film5 = Film.of(Long.parseLong("0"), "name111", "description", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")), 100);
-    Film film6 = Film.of(null, "name", "description", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")), 100);
-    Film film7 = Film.of(Long.parseLong("50"), "name", "description", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")), 100);
+    Film film = Film.of(Long.parseLong("0"), "name", "description", LocalDate.parse("19-04-2020", DateTimeFormatter.ofPattern("dd-MM-yyyy")), 100);
+    Film film1 = Film.of(Long.parseLong("0"), " ", "description", LocalDate.parse("19-04-2020", DateTimeFormatter.ofPattern("dd-MM-yyyy")), 100);
+    Film film2 = Film.of(Long.parseLong("0"), "name", "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondзззжescription" + "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondesc" + "riptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescr" + "iptiondescriptiondescription", LocalDate.parse("19-04-2020", DateTimeFormatter.ofPattern("dd-MM-yyyy")), 100);
+    Film film3 = Film.of(Long.parseLong("0"), "name", "description", LocalDate.parse("19-04-1890", DateTimeFormatter.ofPattern("dd-MM-yyyy")), 100);
+    Film film4 = Film.of(Long.parseLong("0"), "name", "description", LocalDate.parse("19-04-2020", DateTimeFormatter.ofPattern("dd-MM-yyyy")), -100);
+    static Film film5 = Film.of(Long.parseLong("0"), "name111", "description", LocalDate.parse("19-04-2020", DateTimeFormatter.ofPattern("dd-MM-yyyy")), 100);
+    Film film6 = Film.of(null, "name", "description", LocalDate.parse("19-04-2020", DateTimeFormatter.ofPattern("dd-MM-yyyy")), 100);
+    Film film7 = Film.of(Long.parseLong("50"), "name", "description", LocalDate.parse("19-04-2020", DateTimeFormatter.ofPattern("dd-MM-yyyy")), 100);
 
     @BeforeAll
     public static void start() throws ConditionsNotMetException {
