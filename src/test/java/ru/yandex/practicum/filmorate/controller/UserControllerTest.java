@@ -18,14 +18,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class UserControllerTest {
 
     public static UserController userController = new UserController();
-    User user = User.of(Long.parseLong("0"), "name111", "name111@mail.ru", "name111@mail", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-    static User user10 = User.of(Long.parseLong("0"), "name111", "name1113@mail.ru", "name111@mail", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-    User user1 = User.of(Long.parseLong("0"), "name1", "name111mail.ru", "name111@mail", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-    User user2 = User.of(Long.parseLong("0"), "name1", "name111@mail.ru", "name111@mail", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-    User user3 = User.of(Long.parseLong("0"), "name1", "name161@mail.ru", " ", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-    User user4 = User.of(Long.parseLong("0"), "name1", "name181@mail.ru", "name111@mail", LocalDate.parse("19.04.2028", DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-    User user5 = User.of(null, "name1", "name111@mail.ru", "name119@mail", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-    User user6 = User.of(Long.parseLong("600"), "name1", "name911@mail.ru", "name111@mail", LocalDate.parse("19.04.2020", DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+    User user = User.of(Long.parseLong("0"), "name111", "name111@mail.ru", "name111@mail", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    static User user10 = User.of(Long.parseLong("0"), "name111", "name1113@mail.ru", "name111@mail", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    User user1 = User.of(Long.parseLong("0"), "name1", "name111mail.ru", "name111@mail", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    User user2 = User.of(Long.parseLong("0"), "name1", "name111@mail.ru", "name111@mail", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    User user3 = User.of(Long.parseLong("0"), "name1", "name161@mail.ru", " ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    User user4 = User.of(Long.parseLong("0"), "name1", "name181@mail.ru", "name111@mail", LocalDate.parse("2028-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    User user5 = User.of(null, "name1", "name111@mail.ru", "name119@mail", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+    User user6 = User.of(Long.parseLong("600"), "name1", "name911@mail.ru", "name111@mail", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
 
     @BeforeAll
     public static void start() throws ConditionsNotMetException, DuplicatedDataException {

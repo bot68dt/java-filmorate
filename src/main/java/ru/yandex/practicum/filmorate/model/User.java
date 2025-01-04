@@ -21,6 +21,6 @@ public class User {
     @NonNull
     @NotBlank
     private String login;
-    @JsonFormat(pattern = "dd.MM.yyyy")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday;
 }
