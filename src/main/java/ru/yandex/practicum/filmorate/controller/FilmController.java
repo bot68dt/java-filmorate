@@ -34,7 +34,7 @@ public class FilmController {
             log.error("Exception", new ConditionsNotMetException("Название не может быть пустым"));
             throw new ConditionsNotMetException("Название не может быть пустым");
         }
-        if (film.getDescription().length() > 200) {
+        if (film.getDescription().length() > 200 && film.getDescription().contains(" ")) {
             log.error("Exception", new ConditionsNotMetException("Максимальная длина описания — 200 символов"));
             throw new ConditionsNotMetException("Максимальная длина описания — 200 символов");
         }
@@ -70,7 +70,7 @@ public class FilmController {
                 log.error("Exception", new ConditionsNotMetException("Название не может быть пустым"));
                 throw new ConditionsNotMetException("Название не может быть пустым");
             } else oldFilm.setName(oldFilm.getName());
-            if (newFilm.getDescription().length() > 200) {
+            if (newFilm.getDescription().length() > 200 && newFilm.getDescription().contains(" ")) {
                 log.error("Exception", new ConditionsNotMetException("Максимальная длина описания — 200 символов"));
                 throw new ConditionsNotMetException("Максимальная длина описания — 200 символов");
             } else oldFilm.setName(newFilm.getName());
