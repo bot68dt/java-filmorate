@@ -29,15 +29,11 @@ public class UserController {
     @PostMapping
     public User create(@Valid @RequestBody User user) throws ConditionsNotMetException, DuplicatedDataException {
         log.info("Обработка Create-запроса...");
+        duplicateCheck(user);
         if (user.getEmail() == null || user.getEmail().isBlank() || !user.getEmail().contains("@") || user.getEmail().contains(" ") || user.getEmail().length() == 1) {
             log.error("Exception", new ConditionsNotMetException("Электронная почта не может быть пустой и должна содержать символ @"));
             throw new ConditionsNotMetException("Электронная почта не может быть пустой и должна содержать символ @");
         }
-        for (User u : users.values())
-            if (u.getEmail().equals(user.getEmail())) {
-                log.error("Exception", new DuplicatedDataException("Этот имейл уже используется"));
-                throw new DuplicatedDataException("Этот имейл уже используется");
-            }
         if (user.getLogin() == null || user.getLogin().contains(" ") || user.getLogin().isBlank()) {
             log.error("Exception", new ConditionsNotMetException("Логин не может быть пустым и содержать пробелы"));
             throw new ConditionsNotMetException("Логин не может быть пустым и содержать пробелы");
@@ -61,6 +57,14 @@ public class UserController {
     private long getNextId() {
         long currentMaxId = users.keySet().stream().mapToLong(id -> id).max().orElse(0);
         return ++currentMaxId;
+    }
+
+    private void duplicateCheck(User user) throws DuplicatedDataException {
+        for (User u : users.values())
+            if (u.getEmail().equals(user.getEmail())) {
+                log.error("Exception", new DuplicatedDataException("Этот имейл уже используется"));
+                throw new DuplicatedDataException("Этот имейл уже используется");
+            }
     }
 
     @PutMapping

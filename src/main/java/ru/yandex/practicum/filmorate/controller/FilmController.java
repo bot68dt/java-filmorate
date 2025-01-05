@@ -28,13 +28,13 @@ public class FilmController {
     }
 
     @PostMapping
-    public Film create(@Valid @RequestBody Film film) throws ConditionsNotMetException {
+    public Film create(@Valid @RequestBody Film film) throws ConditionsNotMetException, NullPointerException {
         log.info("Обработка Create-запроса...");
         if (film.getName() == null || film.getName().isBlank()) {
             log.error("Exception", new ConditionsNotMetException("Название не может быть пустым"));
             throw new ConditionsNotMetException("Название не может быть пустым");
         }
-        if (film.getDescription().length() > 200 && film.getDescription().contains(" ")) {
+        if (film.getDescription().length() > 200) {
             log.error("Exception", new ConditionsNotMetException("Максимальная длина описания — 200 символов"));
             throw new ConditionsNotMetException("Максимальная длина описания — 200 символов");
         }
@@ -42,7 +42,10 @@ public class FilmController {
             log.error("Exception", new ConditionsNotMetException("Дата релиза — не раньше 28 декабря 1895 года"));
             throw new ConditionsNotMetException("Дата релиза — не раньше 28 декабря 1895 года");
         }
-        if (film.getDuration() <= 0 || film.getDuration() == null) {
+        if (film.getDuration() == null || film.getDuration() == 0) {
+            log.error("Exception", new NullPointerException("Продолжительность фильма не может быть нулевой"));
+            throw new NullPointerException("Продолжительность фильма не может быть нулевой");
+        } else if (film.getDuration() < 0) {
             log.error("Exception", new ConditionsNotMetException("Продолжительность фильма должна быть положительным числом"));
             throw new ConditionsNotMetException("Продолжительность фильма должна быть положительным числом");
         }
@@ -70,7 +73,7 @@ public class FilmController {
                 log.error("Exception", new ConditionsNotMetException("Название не может быть пустым"));
                 throw new ConditionsNotMetException("Название не может быть пустым");
             } else oldFilm.setName(newFilm.getName());
-            if (newFilm.getDescription().length() > 200 && newFilm.getDescription().contains(" ")) {
+            if (newFilm.getDescription().length() > 200) {
                 log.error("Exception", new ConditionsNotMetException("Максимальная длина описания — 200 символов"));
                 throw new ConditionsNotMetException("Максимальная длина описания — 200 символов");
             } else oldFilm.setDescription(newFilm.getDescription());
@@ -78,7 +81,10 @@ public class FilmController {
                 log.error("Exception", new ConditionsNotMetException("Дата релиза — не раньше 28 декабря 1895 года"));
                 throw new ConditionsNotMetException("Дата релиза — не раньше 28 декабря 1895 года");
             } else oldFilm.setReleaseDate(newFilm.getReleaseDate());
-            if (newFilm.getDuration() <= 0 || newFilm.getDuration() == null) {
+            if (newFilm.getDuration() == null || newFilm.getDuration() == 0) {
+                log.error("Exception", new NullPointerException("Продолжительность фильма не может быть нулевой"));
+                throw new NullPointerException("Продолжительность фильма не может быть нулевой");
+            } else if (newFilm.getDuration() < 0) {
                 log.error("Exception", new ConditionsNotMetException("Продолжительность фильма должна быть положительным числом"));
                 throw new ConditionsNotMetException("Продолжительность фильма должна быть положительным числом");
             } else oldFilm.setDuration(newFilm.getDuration());

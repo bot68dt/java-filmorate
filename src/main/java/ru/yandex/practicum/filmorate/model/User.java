@@ -3,10 +3,10 @@ package ru.yandex.practicum.filmorate.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NonNull;
 
 import java.time.LocalDate;
 
@@ -18,7 +18,7 @@ public class User {
     private String name;
     @Email
     private String email;
-    @NonNull
+    @NotNull
     @NotBlank
     private String login;
     @JsonFormat(pattern = "yyyy-MM-dd")

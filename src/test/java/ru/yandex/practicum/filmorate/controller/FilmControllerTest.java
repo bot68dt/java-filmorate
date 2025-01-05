@@ -21,7 +21,7 @@ public class FilmControllerTest {
     Film film1 = Film.of(Long.parseLong("0"), " ", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film2 = Film.of(Long.parseLong("0"), "name", "descriptionde scriptiondescriptiondescriptiondescriptiondescriptiondзззжescription" + "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondesc" + "riptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescr" + "iptiondescriptiondescription", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film3 = Film.of(Long.parseLong("0"), "name", "description ", LocalDate.parse("1880-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
-    Film film4 = Film.of(Long.parseLong("0"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), -100);
+    Film film4 = Film.of(Long.parseLong("0"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), null);
     static Film film5 = Film.of(Long.parseLong("0"), "name111", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film6 = Film.of(null, "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film7 = Film.of(Long.parseLong("50"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
@@ -51,8 +51,8 @@ public class FilmControllerTest {
         filmController.create(film3);
     }
 
-    @Test(expected = ConditionsNotMetException.class)
-    public void testDuration() throws ConditionsNotMetException {
+    @Test(expected = NullPointerException.class)
+    public void testDuration() throws NullPointerException, ConditionsNotMetException {
         filmController.create(film4);
     }
 
