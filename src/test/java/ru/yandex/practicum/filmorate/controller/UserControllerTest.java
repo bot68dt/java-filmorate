@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class UserControllerTest {
 
-    public static UserController userController = new UserController();
+    public static UserController userController = new UserController(new UserService());
     User user = User.of(Long.parseLong("0"), "name111", "name111@mail.ru", "name111@mail", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
     static User user10 = User.of(Long.parseLong("0"), "name111", "name1113@mail.ru", "name111@mail", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));
     User user1 = User.of(Long.parseLong("0"), "name1", "name111mail.ru", "name111@mail", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")));

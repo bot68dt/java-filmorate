@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -16,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class FilmControllerTest {
 
-    public static FilmController filmController = new FilmController();
+    public static FilmController filmController = new FilmController(new FilmService());
     Film film = Film.of(Long.parseLong("0"), "name", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film1 = Film.of(Long.parseLong("0"), " ", "description ", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
     Film film2 = Film.of(Long.parseLong("0"), "name", "descriptionde scriptiondescriptiondescriptiondescriptiondescriptiondзззжescription" + "descriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondesc" + "riptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescriptiondescr" + "iptiondescriptiondescription", LocalDate.parse("2020-04-19", DateTimeFormatter.ofPattern("yyyy-MM-dd")), 100);
