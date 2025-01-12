@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
@@ -22,6 +23,19 @@ public class UserService {
     public Collection<User> findAll() {
         log.info("Обработка Get-запроса...");
         return users.values();
+    }
+
+    public User findById(String id) throws ConditionsNotMetException {
+        log.info("Обработка Get-запроса...");
+        if (id.isBlank() || !StringUtils.isNumeric(id)) {
+            log.error("Exception", new ConditionsNotMetException("Идентификатор пользователя не может быть нулевой"));
+            throw new ConditionsNotMetException("Идентификатор пользователя не может быть нулевой");
+        } else for (User u : users.values())
+            if (u.getId().equals(Long.valueOf(id))) {
+                return u;
+            }
+        log.error("Exception", new ConditionsNotMetException("Пользователь с данным идентификатором отсутствует в базе"));
+        throw new ConditionsNotMetException("Пользователь с данным идентификатором отсутствует в базе");
     }
 
     public User create(@Valid User user) throws ConditionsNotMetException, DuplicatedDataException {

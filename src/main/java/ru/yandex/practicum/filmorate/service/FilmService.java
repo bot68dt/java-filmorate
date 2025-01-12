@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import org.apache.commons.lang3.StringUtils;
+
 
 import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDate;
@@ -17,11 +19,24 @@ import java.util.Map;
 @Slf4j
 public class FilmService {
 
-    private final Map<Long, Film> films = new HashMap<>();
+    private static final Map<Long, Film> films = new HashMap<>();
 
     public Collection<Film> findAll() {
         log.info("Обработка Get-запроса...");
         return films.values();
+    }
+
+    public static Film findById(String id) throws ConditionsNotMetException {
+        log.info("Обработка Get-запроса...");
+        if (id.isBlank() || !StringUtils.isNumeric(id)) {
+            log.error("Exception", new ConditionsNotMetException("Идентификатор фильма не может быть нулевой"));
+            throw new ConditionsNotMetException("Идентификатор фильма не может быть нулевой");
+        } else for (Film f : films.values())
+            if (f.getId().equals(Long.valueOf(id))) {
+                return f;
+            }
+        log.error("Exception", new ConditionsNotMetException("Идентификатор фильма отсутствует в базе"));
+        throw new ConditionsNotMetException("Идентификатор фильма отсутствует в базе");
     }
 
     public Film create(@Valid Film film) throws ConditionsNotMetException, NullPointerException {

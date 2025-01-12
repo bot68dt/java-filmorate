@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
@@ -27,7 +28,13 @@ public class UserController {
         return userService.findAll();
     }
 
+    @GetMapping("/{id}")
+    public User findById(@PathVariable("id") String id) throws ConditionsNotMetException {
+        return userService.findById(id);
+    }
+
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public User create(@Valid @RequestBody User user) throws ConditionsNotMetException, DuplicatedDataException {
         return userService.create(user);
     }
