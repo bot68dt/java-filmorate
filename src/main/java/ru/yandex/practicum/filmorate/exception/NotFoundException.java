@@ -1,13 +1,22 @@
 package ru.yandex.practicum.filmorate.exception;
 
-import java.io.IOException;
+public class NotFoundException extends RuntimeException {
+    private String parameter;
+    private String reason;
 
-public class NotFoundException extends IOException {
-    public NotFoundException(final String message) {
-        super(message);
+    public NotFoundException(String parameter, String reason) {
+        this.parameter = parameter;
+        this.reason = reason;
     }
 
-    @Override
+    public String getParameter() {
+        return this.parameter;
+    }
+
+    public String getReason() {
+        return this.reason;
+    }
+
     public Throwable fillInStackTrace() {
         return null;
     }

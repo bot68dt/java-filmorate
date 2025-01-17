@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.model.ImageData;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -24,97 +25,89 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ImageService {
-
-    private final Map<Long, Image> images = new HashMap<>();
+    private final Map<Long, Image> images = new HashMap();
     private final String imageDirectory = "C:\\Users\\Dim\\Saves";
 
     public List<Image> getPostImages(long filmtId) {
-        return images.values().stream().filter(image -> image.getFilmId() == filmtId).collect(Collectors.toList());
+        return (List)this.images.values().stream().filter((image) -> {
+            return image.getFilmId() == filmtId;
+        }).collect(Collectors.toList());
     }
 
     private Path saveFile(MultipartFile file, Film film) {
         try {
-            // формирование уникального названия файла на основе текущего времени и расширения оригинального файла
             String uniqueFileName = String.format("%d.%s", Instant.now().toEpochMilli(), StringUtils.getFilenameExtension(file.getOriginalFilename()));
-
-            // формирование пути для сохранения файла с учётом идентификаторов автора и поста
-            Path uploadPath = Paths.get(imageDirectory, String.valueOf(film.getId().toString()));
+            Path uploadPath = Paths.get("C:\\Users\\Dim\\Saves", String.valueOf(film.getId().toString()));
             Path filePath = uploadPath.resolve(uniqueFileName);
-
-            // создаём директории, если они ещё не созданы
-            if (!Files.exists(uploadPath)) {
+            if (!Files.exists(uploadPath, new LinkOption[0])) {
                 Files.createDirectories(uploadPath);
             }
 
-            // сохраняем файл по сформированному пути
             file.transferTo(filePath);
             return filePath;
-        } catch (IOException e) {
+        } catch (IOException var6) {
+            IOException e = var6;
             throw new RuntimeException(e);
         }
     }
 
-    // сохранение списка изображений, связанных с указанным постом
     public List<Image> saveImages(long filmId, List<MultipartFile> files) {
-        return files.stream().map(file -> {
+        return (List)files.stream().map((file) -> {
             try {
-                return saveImage(filmId, file);
-            } catch (ConditionsNotMetException e) {
+                return this.saveImage(filmId, file);
+            } catch (ConditionsNotMetException var5) {
+                ConditionsNotMetException e = var5;
                 throw new RuntimeException(e);
             }
         }).collect(Collectors.toList());
     }
 
-    // сохранение отдельного изображения, связанного с указанным постом
     private Image saveImage(Long filmId, MultipartFile file) throws ConditionsNotMetException {
         Film film = FilmService.findById(filmId.toString());
-
-        // сохраняем изображение на диск и возвращаем путь к файлу
-        Path filePath = saveFile(file, film);
-
-        // создаём объект для хранения данных изображения
-        long imageId = getNextId();
-
-        // создание объекта изображения и заполнение его данными
+        Path filePath = this.saveFile(file, film);
+        long imageId = this.getNextId();
         Image image = new Image();
         image.setId(imageId);
         image.setFilePath(filePath.toString());
         image.setFilmId(filmId);
-        // запоминаем название файла, которое было при его передаче
         image.setOriginalFileName(file.getOriginalFilename());
-
-        images.put(imageId, image);
-
+        this.images.put(imageId, image);
         return image;
     }
 
     private long getNextId() {
-        long currentMaxId = images.keySet().stream().mapToLong(id -> id).max().orElse(0);
+        long currentMaxId = this.images.keySet().stream().mapToLong((id) -> {
+            return id;
+        }).max().orElse(0L);
         return ++currentMaxId;
     }
 
-    // загружаем данные указанного изображения с диска
     public ImageData getImageData(long imageId) throws NotFoundException, ImageFileException {
-        if (!images.containsKey(imageId)) {
-            throw new NotFoundException("Изображение с id = " + imageId + " не найдено");
+        if (!this.images.containsKey(imageId)) {
+            throw new NotFoundException(String.valueOf(imageId), "Изображение с указанным id не найдено");
+        } else {
+            Image image = (Image)this.images.get(imageId);
+            byte[] data = this.loadFile(image);
+            return new ImageData(data, image.getOriginalFileName());
         }
-        Image image = images.get(imageId);
-        // загрузка файла с диска
-        byte[] data = loadFile(image);
-
-        return new ImageData(data, image.getOriginalFileName());
     }
 
     private byte[] loadFile(Image image) throws ImageFileException {
         Path path = Paths.get(image.getFilePath());
-        if (Files.exists(path)) {
+        String var10002;
+        Long var10003;
+        if (Files.exists(path, new LinkOption[0])) {
             try {
                 return Files.readAllBytes(path);
-            } catch (IOException e) {
-                throw new ImageFileException("Ошибка чтения файла.  Id: " + image.getId() + ", name: " + image.getOriginalFileName());
+            } catch (IOException var4) {
+                var10002 = image.getId().toString();
+                var10003 = image.getId();
+                throw new ImageFileException(var10002, "Ошибка чтения файла.  Id: " + var10003 + ", name: " + image.getOriginalFileName());
             }
         } else {
-            throw new ImageFileException("Файл не найден. Id: " + image.getId() + ", name: " + image.getOriginalFileName());
+            var10002 = image.getId().toString();
+            var10003 = image.getId();
+            throw new ImageFileException(var10002, "Файл не найден. Id: " + var10003 + ", name: " + image.getOriginalFileName());
         }
     }
 }
