@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jdk.jfr.Description;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -12,7 +13,7 @@ import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = { "id" })
-//@AllArgsConstructor(staticName = "of")
+@AllArgsConstructor(staticName = "of")
 public class Film {
     private Long id;
     @NotNull
