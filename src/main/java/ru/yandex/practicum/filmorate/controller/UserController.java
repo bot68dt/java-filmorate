@@ -61,12 +61,12 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public Set<Long> findJointFriends(@Valid @RequestBody @PathVariable("id") String id, @PathVariable("otherId") String otherId) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
+    public Set<User> findJointFriends(@Valid @RequestBody @PathVariable("id") String id, @PathVariable("otherId") String otherId) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
         return userInterface.findJointFriends(id, otherId);
     }
 
     @GetMapping("/{id}/friends")
-    public Set<Long> findJointFriends(@Valid @RequestBody @PathVariable("id") String id) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
+    public Set<User> findJointFriends(@Valid @RequestBody @PathVariable("id") String id) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
         return userInterface.findAllFriends(id);
     }
 }
