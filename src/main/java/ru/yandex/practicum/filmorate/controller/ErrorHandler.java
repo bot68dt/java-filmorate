@@ -16,7 +16,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleConditions(final ConditionsNotMetException e) {
         return Map.of(e.getParameter(), e.getReason());
     }
