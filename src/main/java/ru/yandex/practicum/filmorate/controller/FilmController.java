@@ -22,10 +22,12 @@ public class FilmController {
 
     private final FilmStorage filmStorage;
     private final FilmInterface filmInterface;
+    private final UserStorage userStorage;
 
     @Autowired
     public FilmController(FilmStorage filmStorage, UserStorage userStorage) {
         this.filmStorage = filmStorage;
+        this.userStorage = userStorage;
         this.filmInterface = new FilmService(userStorage, filmStorage);
     }
 
