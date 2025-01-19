@@ -68,7 +68,7 @@ public class InMemoryFilmStorage implements FilmStorage {
                     throw new ConditionsNotMetException(film.getDuration().toString(), "Продолжительность фильма должна быть положительным числом");
                 } else {
                     film.setId(this.getNextId());
-                    film.setLikesIds(new HashSet<>());
+                    film.setLikedUsers(new HashSet<>());
                     films.put(film.getId(), film);
                     return film;
                 }

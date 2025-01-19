@@ -25,5 +25,5 @@ public class Film {
     private LocalDate releaseDate;
     @NotNull
     private Integer duration;
-    private Set<Long> likesIds;
+    private Set<User> likedUsers;
 }

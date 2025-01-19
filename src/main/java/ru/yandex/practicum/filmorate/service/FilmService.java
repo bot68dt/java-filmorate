@@ -32,12 +32,12 @@ public class FilmService implements FilmInterface {
     public Film addLike(String idUser, String idFilm) throws ConditionsNotMetException {
         log.info("Обработка Post-запроса...");
         if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
-            if (!filmStorage.findById(idFilm).getLikesIds().add(Long.valueOf(idUser))) {
+            if (!filmStorage.findById(idFilm).getLikedUsers().add(userStorage.findById(idUser))) {
                 log.error("Exception", new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором уже оставлял лайк."));
                 throw new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором уже оставлял лайк.");
             }
-            filmStorage.findById(idFilm).getLikesIds().add(Long.valueOf(idUser));
-            filmsWithLikes.put(filmStorage.findById(idFilm), filmStorage.findById(idFilm).getLikesIds().size());
+            filmStorage.findById(idFilm).getLikedUsers().add(userStorage.findById(idUser));
+            filmsWithLikes.put(filmStorage.findById(idFilm), filmStorage.findById(idFilm).getLikedUsers().size());
         }
         return filmStorage.findById(idFilm);
     }
@@ -46,12 +46,12 @@ public class FilmService implements FilmInterface {
     public Film delLike(String idUser, String idFilm) throws ConditionsNotMetException {
         log.info("Обработка Del-запроса...");
         if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
-            if (!filmStorage.findById(idFilm).getLikesIds().remove(Long.valueOf(idUser))) {
+            if (!filmStorage.findById(idFilm).getLikedUsers().remove(userStorage.findById(idUser))) {
                 log.error("Exception", new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором не оставлял лайк."));
                 throw new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором не оставлял лайк.");
             }
-            filmStorage.findById(idFilm).getLikesIds().remove(Long.valueOf(idUser));
-            filmsWithLikes.put(filmStorage.findById(idFilm), filmStorage.findById(idFilm).getLikesIds().size());
+            filmStorage.findById(idFilm).getLikedUsers().remove(userStorage.findById(idUser));
+            filmsWithLikes.put(filmStorage.findById(idFilm), filmStorage.findById(idFilm).getLikedUsers().size());
         }
         return filmStorage.findById(idFilm);
     }
