@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 public class FilmService implements FilmInterface {
     UserStorage userStorage;
     FilmStorage filmStorage;
-    private final TreeMap<Film, Integer> filmsWithLikes = new TreeMap();
+    private final TreeMap<String, Integer> filmsWithLikes = new TreeMap();
 
     @Autowired
     public FilmService(UserStorage userStorage, FilmStorage filmStorage) {
@@ -38,7 +38,7 @@ public class FilmService implements FilmInterface {
             }
             filmStorage.findById(idFilm).getLikedUsers().add(userStorage.findById(idUser));
             int a = filmStorage.findById(idFilm).getLikedUsers().size();
-            filmsWithLikes.put(filmStorage.findById(idFilm), a);
+            filmsWithLikes.put(filmStorage.findById(idFilm).getName(), a);
         }
         return filmStorage.findById(idFilm);
     }
@@ -52,23 +52,23 @@ public class FilmService implements FilmInterface {
                 throw new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором не оставлял лайк.");
             }
             filmStorage.findById(idFilm).getLikedUsers().remove(userStorage.findById(idUser));
-            filmsWithLikes.put(filmStorage.findById(idFilm), filmStorage.findById(idFilm).getLikedUsers().size());
+            filmsWithLikes.put(filmStorage.findById(idFilm).getName(), filmStorage.findById(idFilm).getLikedUsers().size());
         }
         return filmStorage.findById(idFilm);
     }
 
     @Override
-    public Set<Film> viewRaiting(String count) throws NotFoundException {
+    public Set<String> viewRaiting(String count) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         if (filmsWithLikes.isEmpty()) {
             log.error("Exception", new NotFoundException(count, "Список фильмов с рейтингом пуст."));
             throw new NotFoundException(count, "Список фильмов с рейтингом пуст.");
         }
-        Map<Film, Integer> sorted;
+        Map<String, Integer> sorted;
         if (StringUtils.isNumeric(count)) {
-            sorted = filmsWithLikes.entrySet().stream().limit(Long.valueOf(count)).sorted(Map.Entry.<Film, Integer>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            sorted = filmsWithLikes.entrySet().stream().limit(Long.valueOf(count)).sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         } else {
-            sorted = filmsWithLikes.entrySet().stream().limit(10).sorted(Map.Entry.<Film, Integer>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            sorted = filmsWithLikes.entrySet().stream().limit(10).sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         }
         return sorted.keySet();
     }

@@ -63,7 +63,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Set<Film> viewRaiting(@RequestParam(required = false) String count) throws NotFoundException {
+    public Set<String> viewRaiting(@RequestParam(required = false) String count) throws NotFoundException {
         return filmInterface.viewRaiting(count);
     }
 }
