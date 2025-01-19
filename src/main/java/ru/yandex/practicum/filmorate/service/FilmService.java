@@ -37,7 +37,8 @@ public class FilmService implements FilmInterface {
                 throw new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором уже оставлял лайк.");
             }
             filmStorage.findById(idFilm).getLikedUsers().add(userStorage.findById(idUser));
-            filmsWithLikes.put(filmStorage.findById(idFilm), filmStorage.findById(idFilm).getLikedUsers().size());
+            int a = filmStorage.findById(idFilm).getLikedUsers().size();
+            filmsWithLikes.put(filmStorage.findById(idFilm), a);
         }
         return filmStorage.findById(idFilm);
     }

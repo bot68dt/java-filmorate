@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jdk.jfr.Description;
@@ -25,5 +26,6 @@ public class Film {
     private LocalDate releaseDate;
     @NotNull
     private Integer duration;
+    @JsonIgnore
     private Set<User> likedUsers;
 }
