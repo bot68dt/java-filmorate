@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -28,7 +29,7 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public boolean addLike(String idUser, String idFilm) throws ConditionsNotMetException {
+    public Film addLike(String idUser, String idFilm) throws ConditionsNotMetException {
         log.info("Обработка Post-запроса...");
         if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
             if (!filmStorage.findById(idFilm).getLikesIds().add(Long.valueOf(idUser))) {
@@ -38,11 +39,11 @@ public class FilmService implements FilmInterface {
             filmStorage.findById(idFilm).getLikesIds().add(Long.valueOf(idUser));
             filmsWithLikes.put(filmStorage.findById(idFilm).getName(), filmStorage.findById(idFilm).getLikesIds().size());
         }
-        return true;
+        return filmStorage.findById(idFilm);
     }
 
     @Override
-    public boolean delLike(String idUser, String idFilm) throws ConditionsNotMetException {
+    public Film delLike(String idUser, String idFilm) throws ConditionsNotMetException {
         log.info("Обработка Del-запроса...");
         if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
             if (!filmStorage.findById(idFilm).getLikesIds().remove(Long.valueOf(idUser))) {
@@ -52,7 +53,7 @@ public class FilmService implements FilmInterface {
             filmStorage.findById(idFilm).getLikesIds().remove(Long.valueOf(idUser));
             filmsWithLikes.put(filmStorage.findById(idFilm).getName(), filmStorage.findById(idFilm).getLikesIds().size());
         }
-        return true;
+        return filmStorage.findById(idFilm);
     }
 
     @Override

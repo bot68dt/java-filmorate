@@ -51,12 +51,12 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public boolean addLike(@Valid @RequestBody @PathVariable("id") String id, @PathVariable("userId") String userId) throws ConditionsNotMetException {
+    public Film addLike(@Valid @RequestBody @PathVariable("id") String id, @PathVariable("userId") String userId) throws ConditionsNotMetException {
         return filmInterface.addLike(userId, id);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public boolean delLike(@Valid @RequestBody @PathVariable("id") String id, @PathVariable("userId") String userId) throws NotFoundException {
+    public Film delLike(@Valid @RequestBody @PathVariable("id") String id, @PathVariable("userId") String userId) throws NotFoundException {
         return filmInterface.delLike(userId, id);
     }
 
