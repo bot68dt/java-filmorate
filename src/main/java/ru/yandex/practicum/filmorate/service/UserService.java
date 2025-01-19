@@ -39,14 +39,9 @@ public class UserService implements UserInterface {
     @Override
     public User delFriend(String idUser, String idFriend) throws ConditionsNotMetException {
         log.info("Обработка Del-запроса...");
-        if (!userStorage.findById(idUser).getFriends().contains(userStorage.findById(idFriend))) {
-            log.error("Exception", new ConditionsNotMetException(idFriend, "Пользователь с данным идентификатором не является другом"));
-            throw new ConditionsNotMetException(idFriend, "Пользователь с данным идентификатором не является другом");
-        } else {
-            userStorage.findById(idUser).getFriends().remove(userStorage.findById(idFriend));
-            userStorage.findById(idFriend).getFriends().remove(userStorage.findById(idUser));
-            return userStorage.findById(idFriend);
-        }
+        userStorage.findById(idUser).getFriends().remove(userStorage.findById(idFriend));
+        userStorage.findById(idFriend).getFriends().remove(userStorage.findById(idUser));
+        return userStorage.findById(idFriend);
     }
 
     @Override

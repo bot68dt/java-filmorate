@@ -31,7 +31,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film findById(String id) throws ConditionsNotMetException {
+    public Film findById(String id) throws ConditionsNotMetException, NotFoundException {
         log.info("Обработка Get-запроса...");
         if (!id.isBlank() && StringUtils.isNumeric(id)) {
             Iterator var1 = films.values().iterator();
@@ -39,8 +39,8 @@ public class InMemoryFilmStorage implements FilmStorage {
             Film f;
             do {
                 if (!var1.hasNext()) {
-                    log.error("Exception", new ConditionsNotMetException(id, "Идентификатор фильма отсутствует в базе"));
-                    throw new ConditionsNotMetException(id, "Идентификатор фильма отсутствует в базе");
+                    log.error("Exception", new NotFoundException(id, "Идентификатор фильма отсутствует в базе"));
+                    throw new NotFoundException(id, "Идентификатор фильма отсутствует в базе");
                 }
 
                 f = (Film) var1.next();

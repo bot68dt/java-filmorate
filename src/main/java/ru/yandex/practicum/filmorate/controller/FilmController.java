@@ -13,7 +13,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
-import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/films")
@@ -35,7 +35,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film findById(@PathVariable("id") String id) throws ConditionsNotMetException {
+    public Film findById(@PathVariable("id") String id) throws ConditionsNotMetException, NotFoundException {
         return filmStorage.findById(id);
     }
 
@@ -61,7 +61,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Map<String, Integer> viewRaiting(@RequestParam(required = false) String count) throws NotFoundException {
+    public Set<String> viewRaiting(@RequestParam(required = false) String count) throws NotFoundException {
         return filmInterface.viewRaiting(count);
     }
 }
