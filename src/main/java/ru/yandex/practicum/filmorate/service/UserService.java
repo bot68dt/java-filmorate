@@ -65,10 +65,6 @@ public class UserService implements UserInterface {
     public Set<User> findAllFriends(String idUser) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         Set<User> result = new HashSet<>(userStorage.findById(idUser).getFriends());
-        if (result.isEmpty()) {
-            log.error("Exception", new NotFoundException(idUser, "Список друзей пуст."));
-            throw new NotFoundException(idUser, "Список друзей пуст.");
-        }
         return result;
     }
 }

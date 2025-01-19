@@ -36,8 +36,8 @@ public class InMemoryUserStorage implements UserStorage {
             User u;
             do {
                 if (!var2.hasNext()) {
-                    log.error("Exception", new ConditionsNotMetException(id, "Пользователь с данным идентификатором отсутствует в базе"));
-                    throw new ConditionsNotMetException(id, "Пользователь с данным идентификатором отсутствует в базе");
+                    log.error("Exception", new NotFoundException(id, "Пользователь с данным идентификатором отсутствует в базе"));
+                    throw new NotFoundException(id, "Пользователь с данным идентификатором отсутствует в базе");
                 }
 
                 u = (User) var2.next();
