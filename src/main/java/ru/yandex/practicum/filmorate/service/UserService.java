@@ -1,153 +1,73 @@
 package ru.yandex.practicum.filmorate.service;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
-@Slf4j
-public class UserService {
-    private final Map<Long, User> users = new HashMap();
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+@Slf4j(topic = "TRACE")
+@ConfigurationPropertiesScan
+public class UserService implements UserInterface {
+    UserStorage userStorage;
 
-    public UserService() {
+    @Autowired
+    public UserService(UserStorage userStorage) {
+        this.userStorage = userStorage;
     }
 
-    public Collection<User> findAll() {
+    @Override
+    public boolean addFriend(String idUser, String idFriend) throws ConditionsNotMetException {
+        log.info("Обработка Post-запроса...");
+        if (userStorage.findById(idUser).getFriends() != null && userStorage.findById(idUser).getFriends().contains(userStorage.findById(idFriend).getId())) {
+            log.error("Exception", new ConditionsNotMetException(idFriend, "Пользователь с данным идентификатором уже добавлен в друзья"));
+            throw new ConditionsNotMetException(idFriend, "Пользователь с данным идентификатором уже добавлен в друзья");
+        } else {
+            userStorage.findById(idUser).getFriends().add(Long.valueOf(idFriend));
+            userStorage.findById(idFriend).getFriends().add(Long.valueOf(idUser));
+            return true;
+        }
+    }
+
+    @Override
+    public boolean delFriend(String idUser, String idFriend) throws ConditionsNotMetException {
+        log.info("Обработка Del-запроса...");
+        if (!userStorage.findById(idUser).getFriends().contains(userStorage.findById(idFriend).getId())) {
+            log.error("Exception", new ConditionsNotMetException(idFriend, "Пользователь с данным идентификатором не является другом"));
+            throw new ConditionsNotMetException(idFriend, "Пользователь с данным идентификатором не является другом");
+        } else {
+            userStorage.findById(idUser).getFriends().remove(Long.valueOf(idFriend));
+            userStorage.findById(idFriend).getFriends().remove(Long.valueOf(idUser));
+            return true;
+        }
+    }
+
+    @Override
+    public Set<Long> findJointFriends(String idUser, String idFriend) throws NotFoundException {
         log.info("Обработка Get-запроса...");
-        return this.users.values();
+        Set<Long> result = new HashSet<>(userStorage.findById(idUser).getFriends());
+        result.retainAll(userStorage.findById(idFriend).getFriends());
+        if (result.isEmpty()) {
+            log.error("Exception", new NotFoundException(idUser, "Общие друзья с пользователем ID = " + idFriend + "отсутствуют."));
+            throw new NotFoundException(idUser, "Общие друзья с пользователем ID = " + idFriend + "отсутствуют.");
+        }
+        return result;
     }
 
-    public User findById(String id) throws ConditionsNotMetException {
+    @Override
+    public Set<Long> findAllFriends(String idUser) throws NotFoundException {
         log.info("Обработка Get-запроса...");
-        if (!id.isBlank() && StringUtils.isNumeric(id)) {
-            Iterator var2 = this.users.values().iterator();
-
-            User u;
-            do {
-                if (!var2.hasNext()) {
-                    log.error("Exception", new ConditionsNotMetException(id, "Пользователь с данным идентификатором отсутствует в базе"));
-                    throw new ConditionsNotMetException(id, "Пользователь с данным идентификатором отсутствует в базе");
-                }
-
-                u = (User) var2.next();
-            } while (!u.getId().equals(Long.valueOf(id)));
-            return u;
-        } else {
-            log.error("Exception", new ConditionsNotMetException(id, "Идентификатор пользователя не может быть нулевой"));
-            throw new ConditionsNotMetException(id, "Идентификатор пользователя не может быть нулевой");
+        Set<Long> result = new HashSet<>(userStorage.findById(idUser).getFriends());
+        if (result.isEmpty()) {
+            log.error("Exception", new NotFoundException(idUser, "Список друзей пуст."));
+            throw new NotFoundException(idUser, "Список друзей пуст.");
         }
-    }
-
-    public User create(@Valid User user) throws ConditionsNotMetException, DuplicatedDataException {
-        log.info("Обработка Create-запроса...");
-        this.duplicateCheck(user);
-        if (user.getEmail() != null && !user.getEmail().isBlank() && user.getEmail().contains("@") && !user.getEmail().contains(" ") && user.getEmail().length() != 1) {
-            if (user.getLogin() != null && !user.getLogin().contains(" ") && !user.getLogin().isBlank()) {
-                if (user.getName() == null || user.getName().isBlank()) {
-                    user.setName(user.getLogin());
-                }
-
-                if (user.getBirthday() != null) {
-                    if (user.getBirthday().isAfter(LocalDate.now())) {
-                        log.error("Exception", new ConditionsNotMetException(user.getBirthday().format(this.formatter), "Дата рождения не может быть в будущем"));
-                        throw new ConditionsNotMetException(user.getBirthday().format(this.formatter), "Дата рождения не может быть в будущем");
-                    } else {
-                        user.setId(this.getNextId());
-                        this.users.put(user.getId(), user);
-                        return user;
-                    }
-                } else {
-                    log.error("Exception", new ConditionsNotMetException(user.getBirthday().toString(), "Дата рождения не может быть нулевой"));
-                    throw new ConditionsNotMetException(user.getBirthday().toString(), "Дата рождения не может быть нулевой");
-                }
-            } else {
-                log.error("Exception", new ConditionsNotMetException(user.getLogin(), "Логин не может быть пустым и содержать пробелы"));
-                throw new ConditionsNotMetException(user.getLogin(), "Логин не может быть пустым и содержать пробелы");
-            }
-        } else {
-            log.error("Exception", new ConditionsNotMetException(user.getEmail(), "Электронная почта не может быть пустой и должна содержать символ @"));
-            throw new ConditionsNotMetException(user.getEmail(), "Электронная почта не может быть пустой и должна содержать символ @");
-        }
-    }
-
-    private long getNextId() {
-        long currentMaxId = this.users.keySet().stream().mapToLong((id) -> {
-            return id;
-        }).max().orElse(0L);
-        return ++currentMaxId;
-    }
-
-    private void duplicateCheck(User user) throws DuplicatedDataException {
-        Iterator var2 = this.users.values().iterator();
-
-        User u;
-        do {
-            if (!var2.hasNext()) {
-                return;
-            }
-
-            u = (User) var2.next();
-        } while (!u.getEmail().equals(user.getEmail()));
-        log.error("Exception", new DuplicatedDataException(user.getEmail(), "Этот имейл уже используется"));
-        throw new DuplicatedDataException(user.getEmail(), "Этот имейл уже используется");
-    }
-
-    public User update(@Valid User newUser) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
-        if (newUser.getId() == null) {
-            log.error("Exception", new ConditionsNotMetException(newUser.getId().toString(), "Id должен быть указан"));
-            throw new ConditionsNotMetException(newUser.getId().toString(), "Id должен быть указан");
-        } else if (!this.users.containsKey(newUser.getId())) {
-            log.error("Exception", new NotFoundException(newUser.getId().toString(), "Пользователь с указанным id не найден"));
-            throw new NotFoundException(newUser.getId().toString(), "Пользователь с указанным id не найден");
-        } else {
-            User oldUser = (User) this.users.get(newUser.getId());
-            if (newUser.getEmail() != null && !newUser.getEmail().isBlank() && newUser.getEmail().contains("@") && !newUser.getEmail().contains(" ") && newUser.getEmail().length() != 1) {
-                if (!newUser.getEmail().equals(oldUser.getEmail())) {
-                    this.duplicateCheck(newUser);
-                    oldUser.setEmail(newUser.getEmail());
-                }
-
-                if (newUser.getLogin() != null && !newUser.getLogin().contains(" ") && !newUser.getLogin().isBlank()) {
-                    oldUser.setLogin(newUser.getLogin());
-                    if (newUser.getName() != null && !newUser.getName().isBlank()) {
-                        oldUser.setName(newUser.getName());
-                    } else {
-                        oldUser.setName(newUser.getLogin());
-                    }
-
-                    if (newUser.getBirthday() != null) {
-                        if (newUser.getBirthday().isAfter(LocalDate.now())) {
-                            log.error("Exception", new ConditionsNotMetException(newUser.getBirthday().format(this.formatter), "Дата рождения не может быть в будущем"));
-                            throw new ConditionsNotMetException(newUser.getBirthday().format(this.formatter), "Дата рождения не может быть в будущем");
-                        } else {
-                            oldUser.setBirthday(newUser.getBirthday());
-                            return oldUser;
-                        }
-                    } else {
-                        log.error("Exception", new ConditionsNotMetException(newUser.getBirthday().toString(), "Дата рождения не может быть нулевой"));
-                        throw new ConditionsNotMetException(newUser.getBirthday().toString(), "Дата рождения не может быть нулевой");
-                    }
-                } else {
-                    log.error("Exception", new ConditionsNotMetException(newUser.getLogin(), "Логин не может быть пустым и содержать пробелы"));
-                    throw new ConditionsNotMetException(newUser.getLogin(), "Логин не может быть пустым и содержать пробелы");
-                }
-            } else {
-                log.error("Exception", new ConditionsNotMetException(newUser.getEmail(), "Электронная почта не может быть пустой и должна содержать символ @"));
-                throw new ConditionsNotMetException(newUser.getEmail(), "Электронная почта не может быть пустой и должна содержать символ @");
-            }
-        }
+        return result;
     }
 }

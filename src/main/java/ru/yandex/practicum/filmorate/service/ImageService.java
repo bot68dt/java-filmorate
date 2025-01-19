@@ -10,6 +10,8 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Image;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.ImageData;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 public class ImageService {
     private final Map<Long, Image> images = new HashMap();
     private final String imageDirectory = "C:\\Users\\Dim\\Saves";
+    private final FilmStorage filmStorage = new InMemoryFilmStorage();
 
     public List<Image> getPostImages(long filmtId) {
         return (List)this.images.values().stream().filter((image) -> {
@@ -63,7 +66,7 @@ public class ImageService {
     }
 
     private Image saveImage(Long filmId, MultipartFile file) throws ConditionsNotMetException {
-        Film film = FilmService.findById(filmId.toString());
+        Film film = filmStorage.findById(filmId.toString());
         Path filePath = this.saveFile(file, film);
         long imageId = this.getNextId();
         Image image = new Image();

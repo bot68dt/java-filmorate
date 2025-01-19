@@ -1,132 +1,73 @@
 package ru.yandex.practicum.filmorate.service;
 
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
-import org.apache.commons.lang3.StringUtils;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-
-import java.time.LocalDateTime;
-import java.time.chrono.ChronoLocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
-@Slf4j
-public class FilmService {
-    private static final Map<Long, Film> films = new HashMap();
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+@Slf4j(topic = "TRACE")
+@ConfigurationPropertiesScan
+public class FilmService implements FilmInterface {
+    UserStorage userStorage;
+    FilmStorage filmStorage;
+    private final TreeMap<String, Integer> filmsWithLikes = new TreeMap();
 
-    public FilmService() {
+    @Autowired
+    public FilmService(UserStorage userStorage, FilmStorage filmStorage) {
+        this.userStorage = userStorage;
+        this.filmStorage = filmStorage;
     }
 
-    public Collection<Film> findAll() {
-        log.info("Обработка Get-запроса...");
-        return films.values();
-    }
-
-    public static Film findById(String id) throws ConditionsNotMetException {
-        log.info("Обработка Get-запроса...");
-        if (!id.isBlank() && StringUtils.isNumeric(id)) {
-            Iterator var1 = films.values().iterator();
-
-            Film f;
-            do {
-                if (!var1.hasNext()) {
-                    log.error("Exception", new ConditionsNotMetException(id, "Идентификатор фильма отсутствует в базе"));
-                    throw new ConditionsNotMetException(id, "Идентификатор фильма отсутствует в базе");
-                }
-
-                f = (Film) var1.next();
-            } while (!f.getId().equals(Long.valueOf(id)));
-            return f;
-        } else {
-            log.error("Exception", new ConditionsNotMetException(id, "Идентификатор фильма не может быть нулевой"));
-            throw new ConditionsNotMetException(id, "Идентификатор фильма не может быть нулевой");
-        }
-    }
-
-    public Film create(@Valid Film film) throws ConditionsNotMetException, NullPointerException {
-        log.info("Обработка Create-запроса...");
-        if (film.getName() != null && !film.getName().isBlank()) {
-            if (film.getDescription().length() > 200) {
-                log.error("Exception", new ConditionsNotMetException(film.getDescription(), "Максимальная длина описания — 200 символов"));
-                throw new ConditionsNotMetException(film.getDescription(), "Максимальная длина описания — 200 символов");
-            } else if (film.getReleaseDate().isBefore(ChronoLocalDate.from(LocalDateTime.of(1895, 12, 28, 0, 0, 0)))) {
-                log.error("Exception", new ConditionsNotMetException(film.getReleaseDate().format(this.formatter), "Дата релиза — не раньше 28 декабря 1895 года"));
-                throw new ConditionsNotMetException(film.getReleaseDate().format(this.formatter), "Дата релиза — не раньше 28 декабря 1895 года");
-            } else if (film.getDuration() != null && film.getDuration() != 0) {
-                if (film.getDuration() < 0) {
-                    log.error("Exception", new ConditionsNotMetException(film.getDuration().toString(), "Продолжительность фильма должна быть положительным числом"));
-                    throw new ConditionsNotMetException(film.getDuration().toString(), "Продолжительность фильма должна быть положительным числом");
-                } else {
-                    film.setId(this.getNextId());
-                    films.put(film.getId(), film);
-                    return film;
-                }
-            } else {
-                log.error("Exception", new NullPointerException("Продолжительность фильма не может быть нулевой"));
-                throw new NullPointerException("Продолжительность фильма не может быть нулевой");
+    @Override
+    public boolean addLike(String idUser, String idFilm) throws ConditionsNotMetException {
+        log.info("Обработка Post-запроса...");
+        if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
+            if (!filmStorage.findById(idFilm).getLikesIds().add(Long.valueOf(idUser))) {
+                log.error("Exception", new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором уже оставлял лайк."));
+                throw new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором уже оставлял лайк.");
             }
-        } else {
-            log.error("Exception", new ConditionsNotMetException(film.getName(), "Название не может быть пустым"));
-            throw new ConditionsNotMetException(film.getName(), "Название не может быть пустым");
+            filmStorage.findById(idFilm).getLikesIds().add(Long.valueOf(idUser));
+            filmsWithLikes.put(filmStorage.findById(idFilm).getName(), filmStorage.findById(idFilm).getLikesIds().size());
         }
+        return true;
     }
 
-    private long getNextId() {
-        long currentMaxId = films.keySet().stream().mapToLong((id) -> {
-            return id;
-        }).max().orElse(0L);
-        return ++currentMaxId;
-    }
-
-    public Film update(@Valid Film newFilm) throws ConditionsNotMetException, NotFoundException {
-        log.info("Обработка Put-запроса...");
-        if (newFilm.getId() == null) {
-            log.error("Exception", new ConditionsNotMetException(newFilm.getId().toString(), "Id должен быть указан"));
-            throw new ConditionsNotMetException(newFilm.getId().toString(), "Id должен быть указан");
-        } else if (films.containsKey(newFilm.getId())) {
-            Film oldFilm = (Film) films.get(newFilm.getId());
-            if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
-                oldFilm.setName(newFilm.getName());
-                if (newFilm.getDescription().length() > 200) {
-                    log.error("Exception", new ConditionsNotMetException(newFilm.getDescription(), "Максимальная длина описания — 200 символов"));
-                    throw new ConditionsNotMetException(newFilm.getDescription(), "Максимальная длина описания — 200 символов");
-                } else {
-                    oldFilm.setDescription(newFilm.getDescription());
-                    if (newFilm.getReleaseDate().isBefore(ChronoLocalDate.from(LocalDateTime.of(1895, 12, 28, 0, 0, 0)))) {
-                        log.error("Exception", new ConditionsNotMetException(newFilm.getReleaseDate().format(this.formatter), "Дата релиза — не раньше 28 декабря 1895 года"));
-                        throw new ConditionsNotMetException(newFilm.getReleaseDate().format(this.formatter), "Дата релиза — не раньше 28 декабря 1895 года");
-                    } else {
-                        oldFilm.setReleaseDate(newFilm.getReleaseDate());
-                        if (newFilm.getDuration() != null && newFilm.getDuration() != 0) {
-                            if (newFilm.getDuration() < 0) {
-                                log.error("Exception", new ConditionsNotMetException(newFilm.getDuration().toString(), "Продолжительность фильма должна быть положительным числом"));
-                                throw new ConditionsNotMetException(newFilm.getDuration().toString(), "Продолжительность фильма должна быть положительным числом");
-                            } else {
-                                oldFilm.setDuration(newFilm.getDuration());
-                                return oldFilm;
-                            }
-                        } else {
-                            log.error("Exception", new NullPointerException("Продолжительность фильма не может быть нулевой"));
-                            throw new NullPointerException("Продолжительность фильма не может быть нулевой");
-                        }
-                    }
-                }
-            } else {
-                log.error("Exception", new ConditionsNotMetException(newFilm.getName(), "Название не может быть пустым"));
-                throw new ConditionsNotMetException(newFilm.getName(), "Название не может быть пустым");
+    @Override
+    public boolean delLike(String idUser, String idFilm) throws ConditionsNotMetException {
+        log.info("Обработка Del-запроса...");
+        if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
+            if (!filmStorage.findById(idFilm).getLikesIds().remove(Long.valueOf(idUser))) {
+                log.error("Exception", new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором не оставлял лайк."));
+                throw new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором не оставлял лайк.");
             }
-        } else {
-            log.error("Exception", new ConditionsNotMetException(newFilm.getId().toString(), "Фильм с указанным id не найден"));
-            throw new NotFoundException(newFilm.getId().toString(), "Фильм с указанным id не найден");
+            filmStorage.findById(idFilm).getLikesIds().remove(Long.valueOf(idUser));
+            filmsWithLikes.put(filmStorage.findById(idFilm).getName(), filmStorage.findById(idFilm).getLikesIds().size());
         }
+        return true;
+    }
+
+    @Override
+    public Map<String, Integer> viewRaiting(String count) throws NotFoundException {
+        log.info("Обработка Get-запроса...");
+        if (filmsWithLikes.isEmpty()) {
+            log.error("Exception", new NotFoundException(count, "Список фильмов с рейтингом пуст."));
+            throw new NotFoundException(count, "Список фильмов с рейтингом пуст.");
+        }
+        Map<String, Integer> sorted;
+        if (StringUtils.isNumeric(count)) {
+            sorted = filmsWithLikes.entrySet().stream().limit(Long.valueOf(count)).sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        } else {
+            sorted = filmsWithLikes.entrySet().stream().limit(10).sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        }
+        return sorted;
     }
 }
