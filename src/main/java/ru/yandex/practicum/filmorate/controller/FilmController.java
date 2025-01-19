@@ -13,7 +13,7 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
-import java.util.Set;
+import java.util.List;
 
 @RestController
 @RequestMapping("/films")
@@ -63,7 +63,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Set<String> viewRaiting(@RequestParam(required = false) String count) throws NotFoundException {
+    public List<String> viewRaiting(@RequestParam(required = false) String count) throws NotFoundException {
         return filmInterface.viewRaiting(count);
     }
 }

@@ -58,7 +58,7 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public Set<String> viewRaiting(String count) throws NotFoundException {
+    public List<String> viewRaiting(String count) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         if (filmsWithLikes.isEmpty()) {
             log.error("Exception", new NotFoundException(count, "Список фильмов с рейтингом пуст."));
@@ -66,10 +66,10 @@ public class FilmService implements FilmInterface {
         }
         Map<String, Integer> sorted;
         if (StringUtils.isNumeric(count)) {
-            sorted = filmsWithLikes.entrySet().stream().limit(Long.valueOf(count)).sorted(Map.Entry.comparingByValue()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            sorted = filmsWithLikes.entrySet().stream().limit(Long.valueOf(count)).sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         } else {
-            sorted = filmsWithLikes.entrySet().stream().limit(10).sorted(Map.Entry.comparingByValue()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            sorted = filmsWithLikes.entrySet().stream().limit(10).sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         }
-        return sorted.keySet();
+        return new ArrayList<>(sorted.keySet());
     }
 }
