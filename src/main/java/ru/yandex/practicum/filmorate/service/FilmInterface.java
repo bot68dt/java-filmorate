@@ -9,5 +9,5 @@ public interface FilmInterface {
 
     public Film delLike(String idUser, String idFilm);
 
-    public Set<String> viewRaiting(String count);
+    public Set<Film> viewRaiting(String count);
 }
