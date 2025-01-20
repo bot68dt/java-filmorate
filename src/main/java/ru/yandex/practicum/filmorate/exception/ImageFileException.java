@@ -1,13 +1,22 @@
 package ru.yandex.practicum.filmorate.exception;
 
-import java.io.IOException;
+public class ImageFileException extends RuntimeException {
+    private String parameter;
+    private String reason;
 
-public class ImageFileException extends IOException {
-    public ImageFileException(final String message) {
-        super(message);
+    public ImageFileException(String parameter, String reason) {
+        this.parameter = parameter;
+        this.reason = reason;
     }
 
-    @Override
+    public String getParameter() {
+        return this.parameter;
+    }
+
+    public String getReason() {
+        return this.reason;
+    }
+
     public Throwable fillInStackTrace() {
         return null;
     }
