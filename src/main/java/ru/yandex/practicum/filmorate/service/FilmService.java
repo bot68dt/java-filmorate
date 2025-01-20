@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class FilmService implements FilmInterface {
     UserStorage userStorage;
     FilmStorage filmStorage;
-    private final TreeMap<Film, Integer> filmsWithLikes = new TreeMap();
+    private final TreeMap<Long, Integer> filmsWithLikes = new TreeMap();
 
     @Autowired
     public FilmService(UserStorage userStorage, FilmStorage filmStorage) {
@@ -36,7 +36,7 @@ public class FilmService implements FilmInterface {
                 log.error("Exception", new ConditionsNotMetException(idUser.toString(), "Пользователь с данным идентификатором уже оставлял лайк."));
                 throw new ConditionsNotMetException(idUser.toString(), "Пользователь с данным идентификатором уже оставлял лайк.");
             }
-            filmsWithLikes.put(filmStorage.findById(idFilm), filmStorage.findById(idFilm).getLikedUsers().size());
+            filmsWithLikes.put(filmStorage.findById(idFilm).getId(), filmStorage.findById(idFilm).getLikedUsers().size());
         }
         return filmStorage.findById(idFilm);
     }
@@ -50,7 +50,7 @@ public class FilmService implements FilmInterface {
                 log.error("Exception", new ConditionsNotMetException(idUser.toString(), "Пользователь с данным идентификатором не оставлял лайк."));
                 throw new ConditionsNotMetException(idUser.toString(), "Пользователь с данным идентификатором не оставлял лайк.");
             }
-            filmsWithLikes.put(filmStorage.findById(idFilm), filmStorage.findById(idFilm).getLikedUsers().size());
+            filmsWithLikes.put(filmStorage.findById(idFilm).getId(), filmStorage.findById(idFilm).getLikedUsers().size());
         }
         return filmStorage.findById(idFilm);
     }
@@ -62,12 +62,15 @@ public class FilmService implements FilmInterface {
             log.error("Exception", new NotFoundException(count.toString(), "Список фильмов с рейтингом пуст."));
             throw new NotFoundException(count.toString(), "Список фильмов с рейтингом пуст.");
         }
-        Map<Film, Integer> sorted;
+        Map<Long, Integer> sorted;
         if (count != 0 || !count.equals(null)) {
-            sorted = filmsWithLikes.entrySet().stream().sorted(Map.Entry.<Film, Integer>comparingByValue().reversed()).limit(count).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            sorted = filmsWithLikes.entrySet().stream().sorted(Map.Entry.<Long, Integer>comparingByValue().reversed()).limit(count).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         } else {
-            sorted = filmsWithLikes.entrySet().stream().sorted(Map.Entry.<Film, Integer>comparingByValue().reversed()).limit(10).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            sorted = filmsWithLikes.entrySet().stream().sorted(Map.Entry.<Long, Integer>comparingByValue().reversed()).limit(10).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         }
-        return new ArrayList<>(sorted.keySet());
+        List films = new LinkedList();
+        for (Long l : sorted.keySet())
+            films.add(filmStorage.findById(l));
+        return films;
     }
 }
