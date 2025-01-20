@@ -9,5 +9,5 @@ public interface FilmInterface {
 
     public Film delLike(Long idUser, Long idFilm);
 
-    public List<String> viewRaiting(Long count);
+    public List<Film> viewRaiting(Long count);
 }
