@@ -24,11 +24,11 @@ public class UserService implements UserInterface {
     }
 
     @Override
-    public User addFriend(String idUser, String idFriend) throws ConditionsNotMetException {
+    public User addFriend(Long idUser, Long idFriend) throws ConditionsNotMetException {
         log.info("Обработка Post-запроса...");
         if (userStorage.findById(idUser).getFriends() != null && userStorage.findById(idUser).getFriends().contains(userStorage.findById(idFriend))) {
-            log.error("Exception", new ConditionsNotMetException(idFriend, "Пользователь с данным идентификатором уже добавлен в друзья"));
-            throw new ConditionsNotMetException(idFriend, "Пользователь с данным идентификатором уже добавлен в друзья");
+            log.error("Exception", new ConditionsNotMetException(idFriend.toString(), "Пользователь с данным идентификатором уже добавлен в друзья"));
+            throw new ConditionsNotMetException(idFriend.toString(), "Пользователь с данным идентификатором уже добавлен в друзья");
         } else {
             userStorage.findById(idUser).getFriends().add(userStorage.findById(idFriend));
             userStorage.findById(idFriend).getFriends().add(userStorage.findById(idUser));
@@ -37,7 +37,7 @@ public class UserService implements UserInterface {
     }
 
     @Override
-    public User delFriend(String idUser, String idFriend) throws ConditionsNotMetException {
+    public User delFriend(Long idUser, Long idFriend) throws ConditionsNotMetException {
         log.info("Обработка Del-запроса...");
         userStorage.findById(idUser).getFriends().remove(userStorage.findById(idFriend));
         userStorage.findById(idFriend).getFriends().remove(userStorage.findById(idUser));
@@ -45,19 +45,15 @@ public class UserService implements UserInterface {
     }
 
     @Override
-    public Set<User> findJointFriends(String idUser, String idFriend) throws NotFoundException {
+    public Set<User> findJointFriends(Long idUser, Long idFriend) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         Set<User> result = new HashSet<>(userStorage.findById(idUser).getFriends());
         result.retainAll(userStorage.findById(idFriend).getFriends());
-        /*if (result.isEmpty()) {
-            log.error("Exception", new NotFoundException(idUser, "Общие друзья с пользователем ID = " + idFriend + "отсутствуют."));
-            throw new NotFoundException(idUser, "Общие друзья с пользователем ID = " + idFriend + "отсутствуют.");
-        }*/
         return result;
     }
 
     @Override
-    public Set<User> findAllFriends(String idUser) throws NotFoundException {
+    public Set<User> findAllFriends(Long idUser) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         return userStorage.findById(idUser).getFriends();
     }

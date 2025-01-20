@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.film;
 import jakarta.validation.Valid;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
@@ -31,24 +30,24 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film findById(String id) throws ConditionsNotMetException, NotFoundException {
+    public Film findById(Long id) throws ConditionsNotMetException, NotFoundException {
         log.info("Обработка Get-запроса...");
-        if (!id.isBlank() && StringUtils.isNumeric(id)) {
+        if (id != 0 || !id.equals(null)) {
             Iterator var1 = films.values().iterator();
 
             Film f;
             do {
                 if (!var1.hasNext()) {
-                    log.error("Exception", new NotFoundException(id, "Идентификатор фильма отсутствует в базе"));
-                    throw new NotFoundException(id, "Идентификатор фильма отсутствует в базе");
+                    log.error("Exception", new NotFoundException(id.toString(), "Идентификатор фильма отсутствует в базе"));
+                    throw new NotFoundException(id.toString(), "Идентификатор фильма отсутствует в базе");
                 }
 
                 f = (Film) var1.next();
-            } while (!f.getId().equals(Long.valueOf(id)));
+            } while (!f.getId().equals(id));
             return f;
         } else {
-            log.error("Exception", new ConditionsNotMetException(id, "Идентификатор фильма не может быть нулевой"));
-            throw new ConditionsNotMetException(id, "Идентификатор фильма не может быть нулевой");
+            log.error("Exception", new ConditionsNotMetException(id.toString(), "Идентификатор фильма не может быть нулевой"));
+            throw new ConditionsNotMetException(id.toString(), "Идентификатор фильма не может быть нулевой");
         }
     }
 

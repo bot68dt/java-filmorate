@@ -66,7 +66,7 @@ public class ImageService {
     }
 
     private Image saveImage(Long filmId, MultipartFile file) throws ConditionsNotMetException {
-        Film film = filmStorage.findById(filmId.toString());
+        Film film = filmStorage.findById(filmId);
         Path filePath = this.saveFile(file, film);
         long imageId = this.getNextId();
         Image image = new Image();

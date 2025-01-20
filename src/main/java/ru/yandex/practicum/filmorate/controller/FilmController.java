@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmInterface;
-import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
@@ -25,10 +24,10 @@ public class FilmController {
     private final UserStorage userStorage;
 
     @Autowired
-    public FilmController(FilmStorage filmStorage, UserStorage userStorage) {
+    public FilmController(FilmStorage filmStorage, UserStorage userStorage, FilmInterface filmInterface) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
-        this.filmInterface = new FilmService(userStorage, filmStorage);
+        this.filmInterface = filmInterface;
     }
 
     @GetMapping
@@ -37,7 +36,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film findById(@PathVariable("id") String id) throws ConditionsNotMetException, NotFoundException {
+    public Film findById(@PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException {
         return filmStorage.findById(id);
     }
 
@@ -53,17 +52,17 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film addLike(@Valid @RequestBody @PathVariable("id") String id, @PathVariable("userId") String userId) throws ConditionsNotMetException {
+    public Film addLike(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("userId") Long userId) throws ConditionsNotMetException {
         return filmInterface.addLike(userId, id);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Film delLike(@Valid @RequestBody @PathVariable("id") String id, @PathVariable("userId") String userId) throws NotFoundException {
+    public Film delLike(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("userId") Long userId) throws NotFoundException {
         return filmInterface.delLike(userId, id);
     }
 
     @GetMapping("/popular")
-    public List<String> viewRaiting(@RequestParam(required = false) String count) throws NotFoundException {
+    public List<String> viewRaiting(@RequestParam(required = false) Long count) throws NotFoundException {
         return filmInterface.viewRaiting(count);
     }
 }

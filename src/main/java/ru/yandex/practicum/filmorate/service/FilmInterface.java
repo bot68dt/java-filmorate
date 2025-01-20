@@ -5,9 +5,9 @@ import ru.yandex.practicum.filmorate.model.Film;
 import java.util.List;
 
 public interface FilmInterface {
-    public Film addLike(String idUser, String idFilm);
+    public Film addLike(Long idUser, Long idFilm);
 
-    public Film delLike(String idUser, String idFilm);
+    public Film delLike(Long idUser, Long idFilm);
 
-    public List<String> viewRaiting(String count);
+    public List<String> viewRaiting(Long count);
 }

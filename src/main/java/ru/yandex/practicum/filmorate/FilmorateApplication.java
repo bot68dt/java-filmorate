@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 @SpringBootApplication
 @ConfigurationPropertiesScan
 @Slf4j
+
 public class FilmorateApplication {
     public static void main(String[] args) {
         SpringApplication.run(FilmorateApplication.class, args);

@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.user;
 import jakarta.validation.Valid;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
@@ -28,24 +27,24 @@ public class InMemoryUserStorage implements UserStorage {
         return this.users.values();
     }
 
-    public User findById(String id) throws ConditionsNotMetException {
+    public User findById(Long id) throws ConditionsNotMetException {
         log.info("Обработка Get-запроса...");
-        if (!id.isBlank() && StringUtils.isNumeric(id)) {
+        if (id != 0 || !id.equals(null)) {
             Iterator var2 = this.users.values().iterator();
 
             User u;
             do {
                 if (!var2.hasNext()) {
-                    log.error("Exception", new NotFoundException(id, "Пользователь с данным идентификатором отсутствует в базе"));
-                    throw new NotFoundException(id, "Пользователь с данным идентификатором отсутствует в базе");
+                    log.error("Exception", new NotFoundException(id.toString(), "Пользователь с данным идентификатором отсутствует в базе"));
+                    throw new NotFoundException(id.toString(), "Пользователь с данным идентификатором отсутствует в базе");
                 }
 
                 u = (User) var2.next();
             } while (!u.getId().equals(Long.valueOf(id)));
             return u;
         } else {
-            log.error("Exception", new ConditionsNotMetException(id, "Идентификатор пользователя не может быть нулевой"));
-            throw new ConditionsNotMetException(id, "Идентификатор пользователя не может быть нулевой");
+            log.error("Exception", new ConditionsNotMetException(id.toString(), "Идентификатор пользователя не может быть нулевой"));
+            throw new ConditionsNotMetException(id.toString(), "Идентификатор пользователя не может быть нулевой");
         }
     }
 

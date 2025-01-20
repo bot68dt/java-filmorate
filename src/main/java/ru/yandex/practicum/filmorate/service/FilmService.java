@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.stereotype.Service;
@@ -29,46 +28,45 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public Film addLike(String idUser, String idFilm) throws ConditionsNotMetException {
+    public Film addLike(Long idUser, Long idFilm) throws ConditionsNotMetException {
         log.info("Обработка Post-запроса...");
         if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
-            if (!filmStorage.findById(idFilm).getLikedUsers().add(userStorage.findById(idUser))) {
-                log.error("Exception", new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором уже оставлял лайк."));
-                throw new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором уже оставлял лайк.");
+            boolean a = filmStorage.findById(idFilm).getLikedUsers().add(userStorage.findById(idUser));
+            if (!a) {
+                log.error("Exception", new ConditionsNotMetException(idUser.toString(), "Пользователь с данным идентификатором уже оставлял лайк."));
+                throw new ConditionsNotMetException(idUser.toString(), "Пользователь с данным идентификатором уже оставлял лайк.");
             }
-            filmStorage.findById(idFilm).getLikedUsers().add(userStorage.findById(idUser));
-            int a = filmStorage.findById(idFilm).getLikedUsers().size();
-            filmsWithLikes.put(filmStorage.findById(idFilm).getName(), a);
-        }
-        return filmStorage.findById(idFilm);
-    }
-
-    @Override
-    public Film delLike(String idUser, String idFilm) throws ConditionsNotMetException {
-        log.info("Обработка Del-запроса...");
-        if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
-            if (!filmStorage.findById(idFilm).getLikedUsers().remove(userStorage.findById(idUser))) {
-                log.error("Exception", new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором не оставлял лайк."));
-                throw new ConditionsNotMetException(idUser, "Пользователь с данным идентификатором не оставлял лайк.");
-            }
-            filmStorage.findById(idFilm).getLikedUsers().remove(userStorage.findById(idUser));
             filmsWithLikes.put(filmStorage.findById(idFilm).getName(), filmStorage.findById(idFilm).getLikedUsers().size());
         }
         return filmStorage.findById(idFilm);
     }
 
     @Override
-    public List<String> viewRaiting(String count) throws NotFoundException {
+    public Film delLike(Long idUser, Long idFilm) throws ConditionsNotMetException {
+        log.info("Обработка Del-запроса...");
+        if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
+            boolean a = filmStorage.findById(idFilm).getLikedUsers().remove(userStorage.findById(idUser));
+            if (!a) {
+                log.error("Exception", new ConditionsNotMetException(idUser.toString(), "Пользователь с данным идентификатором не оставлял лайк."));
+                throw new ConditionsNotMetException(idUser.toString(), "Пользователь с данным идентификатором не оставлял лайк.");
+            }
+            filmsWithLikes.put(filmStorage.findById(idFilm).getName(), filmStorage.findById(idFilm).getLikedUsers().size());
+        }
+        return filmStorage.findById(idFilm);
+    }
+
+    @Override
+    public List<String> viewRaiting(Long count) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         if (filmsWithLikes.isEmpty()) {
-            log.error("Exception", new NotFoundException(count, "Список фильмов с рейтингом пуст."));
-            throw new NotFoundException(count, "Список фильмов с рейтингом пуст.");
+            log.error("Exception", new NotFoundException(count.toString(), "Список фильмов с рейтингом пуст."));
+            throw new NotFoundException(count.toString(), "Список фильмов с рейтингом пуст.");
         }
         Map<String, Integer> sorted;
-        if (StringUtils.isNumeric(count)) {
-            sorted = filmsWithLikes.entrySet().stream().limit(Long.valueOf(count)).sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+        if (count != 0 || !count.equals(null)) {
+            sorted = filmsWithLikes.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).limit(count).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         } else {
-            sorted = filmsWithLikes.entrySet().stream().limit(10).sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+            sorted = filmsWithLikes.entrySet().stream().sorted(Map.Entry.<String, Integer>comparingByValue().reversed()).limit(10).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
         }
         return new ArrayList<>(sorted.keySet());
     }
