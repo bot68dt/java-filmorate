@@ -28,4 +28,10 @@ public class Film {
     private Integer duration;
     @JsonIgnore
     private Set<User> likedUsers;
+    @NotNull
+    @NotBlank
+    private Set<String> genres;
+    @NotNull
+    @NotBlank
+    private String rating;
 }

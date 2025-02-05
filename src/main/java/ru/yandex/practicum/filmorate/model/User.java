@@ -25,4 +25,5 @@ public class User {
     private LocalDate birthday;
     @JsonIgnore
     private Set<User> friends;
+    private FriendRequest friendRequest;
 }
