@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor(staticName = "of")
 public class FriendRequest {
     @NotNull
-    private Long user_id;
-    private Long friend_id;
+    private Long userId;
+    private Long friendId;
     private boolean accept = false;
 }
