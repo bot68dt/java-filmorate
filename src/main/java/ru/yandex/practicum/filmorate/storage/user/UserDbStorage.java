@@ -89,7 +89,7 @@ public class UserDbStorage implements UserStorage {
             User user = jdbcTemplate.queryForObject("select id, name, email, login, birthday from users where id = ?", this::mapRowToUser, id);
             String sqlQuery2 = "select userId, friendId from friends";
             Map<Long, Set<Long>> friends = jdbcTemplate.query(sqlQuery2, new FriendsExtractor());
-            user.setFriends(friends.get(id));
+            //user.setFriends(friends.get(id));
             return user;
         } else {
             log.error("Exception", new ConditionsNotMetException(id.toString(), "Идентификатор пользователя не может быть нулевой"));
