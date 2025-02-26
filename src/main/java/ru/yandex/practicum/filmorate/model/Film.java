@@ -42,6 +42,8 @@ public class Film {
         values.put("description", description);
         values.put("releaseDate", releaseDate);
         values.put("duration", duration);
+        values.put("genres", genres);
+        values.put("mpa", mpa);
         return values;
     }
 }

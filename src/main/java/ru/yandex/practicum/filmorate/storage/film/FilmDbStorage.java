@@ -34,7 +34,7 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
 
     private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
-        return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("releaseDate").toLocalDate()).duration(resultSet.getInt("duration")).likedUsers(new HashSet<>()).genres(new HashMap<>()).mpa(new HashMap<>()).build();
+        return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("releaseDate").toLocalDate()).duration(resultSet.getInt("duration")).likedUsers(new HashSet<>()).genres(resultSet.getObject("genres", Map.class)).mpa(resultSet.getObject("mpa", Map.class)).build();
     }
 
     public static class LikedUsersExtractor implements ResultSetExtractor<Map<Long, Set<Long>>> {
