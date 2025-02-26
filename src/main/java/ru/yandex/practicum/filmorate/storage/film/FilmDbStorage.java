@@ -13,7 +13,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Buffer;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.chrono.ChronoLocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -34,7 +38,7 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
 
     private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
-        return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("releaseDate").toLocalDate()).duration(resultSet.getInt("duration")).likedUsers(new HashSet<>()).genres(resultSet.getObject("genres", Map.class)).mpa(resultSet.getObject("mpa", Map.class)).build();
+        return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("releaseDate").toLocalDate()).duration(resultSet.getInt("duration")).build();
     }
 
     public static class LikedUsersExtractor implements ResultSetExtractor<Map<Long, Set<Long>>> {
@@ -82,7 +86,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Collection<Film> findAll() {
         log.info("Обработка Get-запроса...");
-        String sqlQuery1 = "select id, name, description, releaseDate, duration, ratingId from film";
+        String sqlQuery1 = "select id, name, description, releaseDate, duration from film";
         Collection<Film> films = jdbcTemplate.query(sqlQuery1, this::mapRowToFilm);
         String sqlQuery2 = "select filmId, userId from likedUsers";
         Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(sqlQuery2, new LikedUsersExtractor());
@@ -92,8 +96,11 @@ public class FilmDbStorage implements FilmStorage {
         Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor());
         for (Film film : films) {
             film.setLikedUsers(likedUsers.get(film.getId()));
-            film.setGenres(Map.of("id", filmGenre.get(film.getId())));
-            film.setMpa(Map.of("id", filmRating.get(film.getId())));
+            Set<Genre> genres = new HashSet<>();
+            for (Long g: filmGenre.get(film.getId()))
+                genres.add(Genre.of(g));
+            film.setGenres(genres);
+            film.setMpa(Mpa.of(filmRating.get(film.getId())));
         }
         return films;
     }
@@ -103,23 +110,26 @@ public class FilmDbStorage implements FilmStorage {
         log.info("Обработка Get-запроса...");
         if (id != 0 || !id.equals(null)) {
             try {
-                jdbcTemplate.queryForObject("select id, name, description, releaseDate, duration, ratingId from film where id = ?", this::mapRowToFilm, id);
+                jdbcTemplate.queryForObject("select id, name, description, releaseDate, duration from film where id = ?", this::mapRowToFilm, id);
             } catch (DataAccessException e) {
                 if (e != null) {
                     log.error("Exception", new NotFoundException(id.toString(), "Идентификатор фильма отсутствует в базе"));
                     throw new NotFoundException(id.toString(), "Идентификатор фильма отсутствует в базе");
                 }
             }
-            Film film = jdbcTemplate.queryForObject("select id, name, description, releaseDate, duration, ratingId from film where id = ?", this::mapRowToFilm, id);
+            Film film = jdbcTemplate.queryForObject("select id, name, description, releaseDate, duration from film where id = ?", this::mapRowToFilm, id);
             String sqlQuery2 = "select filmId, userId from likedUsers where filmId = ?";
             Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(sqlQuery2, new LikedUsersExtractor(), id);
             String sqlQuery3 = "select filmId, genreId from filmGenre where filmId = ?";
             Map<Long, Set<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmGenreExtractor(), id);
-            sqlQuery3 = "select id, ratingId from film where filmId = ?";
+            sqlQuery3 = "select id, ratingId from film where id = ?";
             Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor(), id);
             film.setLikedUsers(likedUsers.get(id));
-            film.setGenres(Map.of("id", filmGenre.get(id)));
-            film.setMpa(Map.of("id", filmRating.get(id)));
+            Set<Genre> genres = new HashSet<>();
+            for (Long g: filmGenre.get(id))
+                genres.add(Genre.of(g));
+            film.setGenres(genres);
+            film.setMpa(Mpa.of(filmRating.get(id)));
             return film;
         } else {
             log.error("Exception", new ConditionsNotMetException(id.toString(), "Идентификатор фильма не может быть нулевой"));
@@ -128,28 +138,29 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Film create(@Valid Film film) throws ConditionsNotMetException, NullPointerException {
+    public Film create(@Valid Buffer buffer) throws ConditionsNotMetException, NullPointerException {
         log.info("Обработка Create-запроса...");
-        if (film.getName() != null && !film.getName().isBlank()) {
-            if (film.getDescription().length() > 200) {
-                log.error("Exception", new ConditionsNotMetException(film.getDescription(), "Максимальная длина описания — 200 символов"));
-                throw new ConditionsNotMetException(film.getDescription(), "Максимальная длина описания — 200 символов");
-            } else if (film.getReleaseDate().isBefore(ChronoLocalDate.from(LocalDateTime.of(1895, 12, 28, 0, 0, 0)))) {
-                log.error("Exception", new ConditionsNotMetException(film.getReleaseDate().format(this.formatter), "Дата релиза — не раньше 28 декабря 1895 года"));
-                throw new ConditionsNotMetException(film.getReleaseDate().format(this.formatter), "Дата релиза — не раньше 28 декабря 1895 года");
-            } else if (film.getDuration() != null && film.getDuration() != 0) {
-                if (film.getDuration() < 0) {
-                    log.error("Exception", new ConditionsNotMetException(film.getDuration().toString(), "Продолжительность фильма должна быть положительным числом"));
-                    throw new ConditionsNotMetException(film.getDuration().toString(), "Продолжительность фильма должна быть положительным числом");
+        if (buffer.getName() != null && !buffer.getName().isBlank()) {
+            if (buffer.getDescription().length() > 200) {
+                log.error("Exception", new ConditionsNotMetException(buffer.getDescription(), "Максимальная длина описания — 200 символов"));
+                throw new ConditionsNotMetException(buffer.getDescription(), "Максимальная длина описания — 200 символов");
+            } else if (buffer.getReleaseDate().isBefore(ChronoLocalDate.from(LocalDateTime.of(1895, 12, 28, 0, 0, 0)))) {
+                log.error("Exception", new ConditionsNotMetException(buffer.getReleaseDate().format(this.formatter), "Дата релиза — не раньше 28 декабря 1895 года"));
+                throw new ConditionsNotMetException(buffer.getReleaseDate().format(this.formatter), "Дата релиза — не раньше 28 декабря 1895 года");
+            } else if (buffer.getDuration() != null && buffer.getDuration() != 0) {
+                if (buffer.getDuration() < 0) {
+                    log.error("Exception", new ConditionsNotMetException(buffer.getDuration().toString(), "Продолжительность фильма должна быть положительным числом"));
+                    throw new ConditionsNotMetException(buffer.getDuration().toString(), "Продолжительность фильма должна быть положительным числом");
                 } else {
                     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName("film").usingGeneratedKeyColumns("id");
-                    Long f = simpleJdbcInsert.executeAndReturnKey(film.toMapFilm()).longValue();
+                    Long f = simpleJdbcInsert.executeAndReturnKey(buffer.toMapBuffer()).longValue();
                     String sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
-                    for (Long l : film.getGenres().get("id")) {
-                        jdbcTemplate.update(sqlQuery, f, l);
+                    List<Long> genres = buffer.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
+                    for (Long g : genres) {
+                        jdbcTemplate.update(sqlQuery, f, g);
                     }
                     sqlQuery = "update film set " + "ratingId = ? " + "where id = ?";
-                    jdbcTemplate.update(sqlQuery, film.getMpa().get("id"), f);
+                    jdbcTemplate.update(sqlQuery, buffer.getMpa(), f);
                     return findById(f);
                 }
             } else {
@@ -157,27 +168,19 @@ public class FilmDbStorage implements FilmStorage {
                 throw new NullPointerException("Продолжительность фильма не может быть нулевой");
             }
         } else {
-            log.error("Exception", new ConditionsNotMetException(film.getName(), "Название не может быть пустым"));
-            throw new ConditionsNotMetException(film.getName(), "Название не может быть пустым");
+            log.error("Exception", new ConditionsNotMetException("NULL", "Название не может быть пустым"));
+            throw new ConditionsNotMetException("NULL", "Название не может быть пустым");
         }
     }
 
     @Override
-    public Film update(@Valid Film newFilm) throws ConditionsNotMetException, NotFoundException {
+    public Film update(@Valid Buffer newFilm) throws ConditionsNotMetException, NotFoundException {
         log.info("Обработка Put-запроса...");
         if (newFilm.getId() == null) {
             log.error("Exception", new ConditionsNotMetException("NULL", "Id должен быть указан"));
             throw new ConditionsNotMetException("NULL", "Id должен быть указан");
         } else {
-            try {
-                jdbcTemplate.queryForObject("select id, name, description, releaseDate, duration, ratingId from film where id = ?", this::mapRowToFilm, newFilm.getId());
-            } catch (DataAccessException e) {
-                if (e != null) {
-                    log.error("Exception", new ConditionsNotMetException(newFilm.getId().toString(), "Идентификатор фильма отсутствует в базе"));
-                    throw new ConditionsNotMetException(newFilm.getId().toString(), "Идентификатор фильма отсутствует в базе");
-                }
-            }
-            Film oldFilm = jdbcTemplate.queryForObject("select id, name, description, releaseDate, duration, ratingId from film where id = ?", this::mapRowToFilm, newFilm.getId());
+            Film oldFilm = findById(newFilm.getId());
             if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
                 oldFilm.setName(newFilm.getName());
                 if (newFilm.getDescription().length() > 200) {
@@ -196,18 +199,18 @@ public class FilmDbStorage implements FilmStorage {
                                 throw new ConditionsNotMetException(newFilm.getDuration().toString(), "Продолжительность фильма должна быть положительным числом");
                             } else {
                                 oldFilm.setDuration(newFilm.getDuration());
-                                if (oldFilm.getMpa().get("id") != newFilm.getMpa().get("id") && newFilm.getMpa().get("id") > 0 && newFilm.getMpa().get("id") < 6)
-                                    oldFilm.setMpa(newFilm.getMpa());
-                                //oldFilm.setRatingId(newFilm.getRatingId());
+                                if (!oldFilm.getMpa().equals(newFilm.getMpa()) && newFilm.getMpa() > 0 && newFilm.getMpa() < 6)
+                                    oldFilm.setMpa(Mpa.of(newFilm.getMpa()));
                                 String sqlQuery = "delete from filmGenre where filmId = ?";
-                                jdbcTemplate.update(sqlQuery, newFilm.getId());
-                                String sqlQuery500 = "update film set " + "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + "where id = ?";
-                                jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa().get("id"), oldFilm.getId());
-                                String sqlQuery501 = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
-                                for (Long l : oldFilm.getGenres().get("id")) {
-                                    jdbcTemplate.update(sqlQuery501, oldFilm.getId(), l);
+                                jdbcTemplate.update(sqlQuery, oldFilm.getId());
+                                sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
+                                List<Long> genres = newFilm.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
+                                for (Long g : genres) {
+                                    jdbcTemplate.update(sqlQuery, oldFilm.getId(), g);
                                 }
-                                return oldFilm;
+                                String sqlQuery500 = "update film set " + "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + "where id = ?";
+                                jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa().getId(), oldFilm.getId());
+                                return findById(oldFilm.getId());
                             }
                         } else {
                             log.error("Exception", new NullPointerException("Продолжительность фильма не может быть нулевой"));
