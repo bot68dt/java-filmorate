@@ -96,7 +96,7 @@ public class FilmDbStorage implements FilmStorage {
         Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor());
         for (Film film : films) {
             film.setLikedUsers(likedUsers.get(film.getId()));
-            Set<Genre> genres = new HashSet<>();
+            LinkedHashSet<Genre> genres = new LinkedHashSet<>();
             for (Long g: filmGenre.get(film.getId()))
                 genres.add(Genre.of(g));
             film.setGenres(genres);
@@ -125,7 +125,7 @@ public class FilmDbStorage implements FilmStorage {
             sqlQuery3 = "select id, ratingId from film where id = ?";
             Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor(), id);
             film.setLikedUsers(likedUsers.get(id));
-            Set<Genre> genres = new HashSet<>();
+            LinkedHashSet<Genre> genres = new LinkedHashSet<>();
             for (Long g: filmGenre.get(id))
                 genres.add(Genre.of(g));
             film.setGenres(genres);
