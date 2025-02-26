@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="FilmorateApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="MAIN_CLASS_NAME" value="ru.yandex.practicum.filmorate.FilmorateApplication" />
+    <module name="filmorate" />
+    <option name="PROGRAM_PARAMETERS" value="logging.level.org.zalando.logbook: TRACE" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

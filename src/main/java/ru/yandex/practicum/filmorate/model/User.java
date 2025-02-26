@@ -1,14 +1,14 @@
 package ru.yandex.practicum.filmorate.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = {"email"})
@@ -23,4 +23,7 @@ public class User {
     private String login;
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthday;
+    @JsonIgnore
+    private Set<User> friends;
+    private FriendRequest friendRequest;
 }
