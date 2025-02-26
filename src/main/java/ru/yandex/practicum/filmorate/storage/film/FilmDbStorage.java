@@ -108,7 +108,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Long create(@Valid Film film) throws ConditionsNotMetException, NullPointerException {
+    public Film create(@Valid Film film) throws ConditionsNotMetException, NullPointerException {
         log.info("Обработка Create-запроса...");
         if (film.getName() != null && !film.getName().isBlank()) {
             if (film.getDescription().length() > 200) {
@@ -128,7 +128,7 @@ public class FilmDbStorage implements FilmStorage {
                     for (Long l : film.getGenreId()) {
                         jdbcTemplate.update(sqlQuery, f, l);
                     }
-                    return f;
+                    return findById(f);
                 }
             } else {
                 log.error("Exception", new NullPointerException("Продолжительность фильма не может быть нулевой"));

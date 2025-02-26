@@ -49,7 +49,7 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Long create(@Valid @RequestBody Film film) throws ConditionsNotMetException, NullPointerException {
+    public Film create(@Valid @RequestBody Film film) throws ConditionsNotMetException, NullPointerException {
         return filmStorage.create(film);
     }
 
