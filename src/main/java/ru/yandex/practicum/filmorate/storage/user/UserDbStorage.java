@@ -1,54 +1,103 @@
-/*package ru.yandex.practicum.filmorate.storage.user;
+package ru.yandex.practicum.filmorate.storage.user;
 
 import jakarta.validation.Valid;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-@Component
-@NoArgsConstructor
+@Repository
+@RequiredArgsConstructor
 @Slf4j(topic = "TRACE")
 @ConfigurationPropertiesScan
-public class InMemoryUserStorage implements UserStorage {
-    private final Map<Long, User> users = new HashMap();
+@Component
+@Qualifier("UserDbStorage")
+public class UserDbStorage implements UserStorage {
+
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private final JdbcTemplate jdbcTemplate;
+
+    private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
+        return User.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).email(resultSet.getString("email")).login(resultSet.getString("login")).birthday(resultSet.getDate("birthday").toLocalDate()).friends(new HashSet<>()).friendRequests(new HashSet<>()).build();
+    }
+
+    public static class FriendsExtractor implements ResultSetExtractor<Map<Long, Set<Long>>> {
+        @Override
+        public Map<Long, Set<Long>> extractData(ResultSet rs) throws SQLException {
+            Map<Long, Set<Long>> data = new LinkedHashMap<>();
+            while (rs.next()) {
+                Long userId = rs.getLong("userId");
+                data.putIfAbsent(userId, new HashSet<>());
+                Long friendId = rs.getLong("friendId");
+                data.get(userId).add(friendId);
+            }
+            return data;
+        }
+    }
+
+    public static class EmailExtractor implements ResultSetExtractor<Set<String>> {
+        @Override
+        public Set<String> extractData(ResultSet rs) throws SQLException {
+            Set<String> data = new HashSet<>();
+            while (rs.next()) {
+                String email = rs.getString("email");
+                data.add(email);
+            }
+            return data;
+        }
+    }
 
     public Collection<User> findAll() {
         log.info("Обработка Get-запроса...");
-        return this.users.values();
+        String sqlQuery1 = "select id, name, email, login, birthday from users";
+        Collection<User> users = jdbcTemplate.query(sqlQuery1, this::mapRowToUser);
+        String sqlQuery2 = "select userId, friendId from friends";
+        Map<Long, Set<Long>> friends = jdbcTemplate.query(sqlQuery2, new FriendsExtractor());
+        for (User user : users) {
+            user.setFriends(friends.get(user.getId()));
+        }
+        return users;
     }
 
     public User findById(Long id) throws ConditionsNotMetException {
         log.info("Обработка Get-запроса...");
         if (id != 0 || !id.equals(null)) {
-            Iterator var2 = this.users.values().iterator();
-
-            User u;
-            do {
-                if (!var2.hasNext()) {
+            try {
+                jdbcTemplate.queryForObject("select id, name, email, login, birthday from users where id = ?", this::mapRowToUser, id);
+            } catch (DataAccessException e) {
+                if (e != null) {
                     log.error("Exception", new NotFoundException(id.toString(), "Пользователь с данным идентификатором отсутствует в базе"));
                     throw new NotFoundException(id.toString(), "Пользователь с данным идентификатором отсутствует в базе");
                 }
-
-                u = (User) var2.next();
-            } while (!u.getId().equals(Long.valueOf(id)));
-            return u;
+            }
+            User user = jdbcTemplate.queryForObject("select id, name, email, login, birthday from users where id = ?", this::mapRowToUser, id);
+            String sqlQuery2 = "select userId, friendId from friends";
+            Map<Long, Set<Long>> friends = jdbcTemplate.query(sqlQuery2, new FriendsExtractor());
+            user.setFriends(friends.get(id));
+            return user;
         } else {
             log.error("Exception", new ConditionsNotMetException(id.toString(), "Идентификатор пользователя не может быть нулевой"));
             throw new ConditionsNotMetException(id.toString(), "Идентификатор пользователя не может быть нулевой");
         }
     }
 
-    public User create(@Valid User user) throws ConditionsNotMetException, DuplicatedDataException {
+    public Long create(@Valid User user) throws ConditionsNotMetException, DuplicatedDataException {
         log.info("Обработка Create-запроса...");
         this.duplicateCheck(user);
         if (user.getEmail() != null && !user.getEmail().isBlank() && user.getEmail().contains("@") && !user.getEmail().contains(" ") && user.getEmail().length() != 1) {
@@ -62,10 +111,8 @@ public class InMemoryUserStorage implements UserStorage {
                         log.error("Exception", new ConditionsNotMetException(user.getBirthday().format(this.formatter), "Дата рождения не может быть в будущем"));
                         throw new ConditionsNotMetException(user.getBirthday().format(this.formatter), "Дата рождения не может быть в будущем");
                     } else {
-                        user.setId(this.getNextId());
-                        user.setFriends(new HashSet<>());
-                        this.users.put(user.getId(), user);
-                        return user;
+                        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName("users").usingGeneratedKeyColumns("id");
+                        return simpleJdbcInsert.executeAndReturnKey(user.toMapUser()).longValue();
                     }
                 } else {
                     log.error("Exception", new ConditionsNotMetException(user.getBirthday().toString(), "Дата рождения не может быть нулевой"));
@@ -81,37 +128,29 @@ public class InMemoryUserStorage implements UserStorage {
         }
     }
 
-    private long getNextId() {
-        long currentMaxId = this.users.keySet().stream().mapToLong((id) -> {
-            return id;
-        }).max().orElse(0L);
-        return ++currentMaxId;
-    }
-
     private void duplicateCheck(User user) throws DuplicatedDataException {
-        Iterator var2 = this.users.values().iterator();
-
-        User u;
-        do {
-            if (!var2.hasNext()) {
-                return;
-            }
-
-            u = (User) var2.next();
-        } while (!u.getEmail().equals(user.getEmail()));
-        log.error("Exception", new DuplicatedDataException(user.getEmail(), "Этот имейл уже используется"));
-        throw new DuplicatedDataException(user.getEmail(), "Этот имейл уже используется");
+        String sqlQuery2 = "select email from users";
+        Set<String> emails = jdbcTemplate.query(sqlQuery2, new EmailExtractor());
+        if (emails.contains(user.getEmail())) {
+            log.error("Exception", new DuplicatedDataException(user.getEmail(), "Этот имейл уже используется"));
+            throw new DuplicatedDataException(user.getEmail(), "Этот имейл уже используется");
+        }
     }
 
     public User update(@Valid User newUser) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
         if (newUser.getId() == null) {
-            log.error("Exception", new ConditionsNotMetException(newUser.getId().toString(), "Id должен быть указан"));
-            throw new ConditionsNotMetException(newUser.getId().toString(), "Id должен быть указан");
-        } else if (!this.users.containsKey(newUser.getId())) {
-            log.error("Exception", new NotFoundException(newUser.getId().toString(), "Пользователь с указанным id не найден"));
-            throw new NotFoundException(newUser.getId().toString(), "Пользователь с указанным id не найден");
+            log.error("Exception", new ConditionsNotMetException("NULL", "Id должен быть указан"));
+            throw new ConditionsNotMetException("NULL", "Id должен быть указан");
         } else {
-            User oldUser = (User) this.users.get(newUser.getId());
+            try {
+                jdbcTemplate.queryForObject("select id, name, email, login, birthday from users where id = ?", this::mapRowToUser, newUser.getId());
+            } catch (DataAccessException e) {
+                if (e != null) {
+                    log.error("Exception", new NotFoundException(newUser.getId().toString(), "Пользователь с указанным id не найден"));
+                    throw new NotFoundException(newUser.getId().toString(), "Пользователь с указанным id не найден");
+                }
+            }
+            User oldUser = jdbcTemplate.queryForObject("select id, name, email, login, birthday from users where id = ?", this::mapRowToUser, newUser.getId());
             if (newUser.getEmail() != null && !newUser.getEmail().isBlank() && newUser.getEmail().contains("@") && !newUser.getEmail().contains(" ") && newUser.getEmail().length() != 1) {
                 if (!newUser.getEmail().equals(oldUser.getEmail())) {
                     this.duplicateCheck(newUser);
@@ -132,11 +171,13 @@ public class InMemoryUserStorage implements UserStorage {
                             throw new ConditionsNotMetException(newUser.getBirthday().format(this.formatter), "Дата рождения не может быть в будущем");
                         } else {
                             oldUser.setBirthday(newUser.getBirthday());
+                            String sqlQuery500 = "update users set " + "name = ?, email = ?, login = ?, birthday = ? " + "where id = ?";
+                            jdbcTemplate.update(sqlQuery500, oldUser.getName(), oldUser.getEmail(), oldUser.getLogin(), oldUser.getBirthday(), oldUser.getId());
                             return oldUser;
                         }
                     } else {
-                        log.error("Exception", new ConditionsNotMetException(newUser.getBirthday().toString(), "Дата рождения не может быть нулевой"));
-                        throw new ConditionsNotMetException(newUser.getBirthday().toString(), "Дата рождения не может быть нулевой");
+                        log.error("Exception", new ConditionsNotMetException("NULL", "Дата рождения не может быть нулевой"));
+                        throw new ConditionsNotMetException("NULL", "Дата рождения не может быть нулевой");
                     }
                 } else {
                     log.error("Exception", new ConditionsNotMetException(newUser.getLogin(), "Логин не может быть пустым и содержать пробелы"));
@@ -148,4 +189,4 @@ public class InMemoryUserStorage implements UserStorage {
             }
         }
     }
-}*/
+}

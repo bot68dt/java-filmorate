@@ -10,7 +10,7 @@ public interface FilmStorage {
 
     public Film findById(Long id);
 
-    public Film create(Film film);
+    public Long create(Film film);
 
     public Film update(Film newFilm);
 }

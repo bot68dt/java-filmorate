@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
@@ -12,16 +13,22 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/films")
 
 public class FilmController {
-
+    @Autowired
+    @Qualifier("FilmDbStorage")
     private final FilmStorage filmStorage;
-    private final FilmInterface filmInterface;
+
+    @Autowired
+    @Qualifier("UserDbStorage")
     private final UserStorage userStorage;
+
+    private final FilmInterface filmInterface;
 
     @Autowired
     public FilmController(FilmStorage filmStorage, UserStorage userStorage, FilmInterface filmInterface) {
@@ -42,7 +49,7 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@Valid @RequestBody Film film) throws ConditionsNotMetException, NullPointerException {
+    public Long create(@Valid @RequestBody Film film) throws ConditionsNotMetException, NullPointerException {
         return filmStorage.create(film);
     }
 
@@ -62,7 +69,27 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public List<Film> viewRaiting(@RequestParam(required = false) Long count) throws NotFoundException {
-        return filmInterface.viewRaiting(count);
+    public Map<String, Long> viewRaiting(@RequestParam(required = false) Long count) throws NotFoundException {
+        return filmInterface.viewRating(count);
+    }
+
+    @GetMapping("/genres")
+    public Map<Long, Set<Long>> viewGenre() throws NotFoundException {
+        return filmInterface.viewGenre();
+    }
+
+    @GetMapping("/genres/{id}")
+    public Map<Long, String> viewGenreName(@PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException {
+        return filmInterface.viewGenreName(id);
+    }
+
+    @GetMapping("/mpa")
+    public Map<Long, Long> viewRating() throws NotFoundException {
+        return filmInterface.viewFilmsRating();
+    }
+
+    @GetMapping("/mpa/{id}")
+    public Map<Long, String> viewRatingName(@PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException {
+        return filmInterface.viewRatingName(id);
     }
 }

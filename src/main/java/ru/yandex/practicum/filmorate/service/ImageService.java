@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.service;
+/*package ru.yandex.practicum.filmorate.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -113,4 +113,4 @@ public class ImageService {
             throw new ImageFileException(var10002, "Файл не найден. Id: " + var10003 + ", name: " + image.getOriginalFileName());
         }
     }
-}
+}*/
