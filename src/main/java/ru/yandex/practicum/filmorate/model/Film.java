@@ -31,9 +31,9 @@ public class Film {
     private Integer duration;
     private Set<Long> likedUsers;
     @NotNull
-    private Set<Long> genres;
+    private Map<String,Set<Long>> genres;
     @NotNull
-    private Long ratingId;
+    private Map<String,Long> mpa;
 
     public Map<String, Object> toMapFilm() {
         Map<String, Object> values = new HashMap<>();
@@ -42,7 +42,6 @@ public class Film {
         values.put("description", description);
         values.put("releaseDate", releaseDate);
         values.put("duration", duration);
-        values.put("ratingId", ratingId);
         return values;
     }
 }

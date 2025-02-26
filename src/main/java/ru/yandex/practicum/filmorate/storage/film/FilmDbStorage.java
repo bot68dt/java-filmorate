@@ -34,7 +34,7 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
 
     private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
-        return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("releaseDate").toLocalDate()).duration(resultSet.getInt("duration")).likedUsers(new HashSet<>()).genres(new HashSet<>()).ratingId(resultSet.getLong("ratingId")).build();
+        return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("releaseDate").toLocalDate()).duration(resultSet.getInt("duration")).likedUsers(new HashSet<>()).genres(new HashMap<>()).mpa(new HashMap<>()).build();
     }
 
     public static class LikedUsersExtractor implements ResultSetExtractor<Map<Long, Set<Long>>> {
@@ -65,6 +65,20 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
+    public static class FilmRatingExtractor implements ResultSetExtractor<Map<Long, Long>> {
+        @Override
+        public Map<Long, Long> extractData(ResultSet rs) throws SQLException {
+            Map<Long, Long> data = new HashMap<>();
+            while (rs.next()) {
+                Long id = rs.getLong("id");
+                data.putIfAbsent(id, Long.valueOf(0));
+                Long ratingId = rs.getLong("ratingId");
+                data.put(id, ratingId);
+            }
+            return data;
+        }
+    }
+
     @Override
     public Collection<Film> findAll() {
         log.info("Обработка Get-запроса...");
@@ -74,9 +88,12 @@ public class FilmDbStorage implements FilmStorage {
         Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(sqlQuery2, new LikedUsersExtractor());
         String sqlQuery3 = "select filmId, genreId from filmGenre";
         Map<Long, Set<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmGenreExtractor());
+        sqlQuery3 = "select id, ratingId from film";
+        Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor());
         for (Film film : films) {
             film.setLikedUsers(likedUsers.get(film.getId()));
-            film.setGenres(filmGenre.get(film.getId()));
+            film.setGenres(Map.of("id", filmGenre.get(film.getId())));
+            film.setMpa(Map.of("id", filmRating.get(film.getId())));
         }
         return films;
     }
@@ -98,8 +115,11 @@ public class FilmDbStorage implements FilmStorage {
             Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(sqlQuery2, new LikedUsersExtractor(), id);
             String sqlQuery3 = "select filmId, genreId from filmGenre where filmId = ?";
             Map<Long, Set<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmGenreExtractor(), id);
+            sqlQuery3 = "select id, ratingId from film where filmId = ?";
+            Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor(), id);
             film.setLikedUsers(likedUsers.get(id));
-            film.setGenres(filmGenre.get(id));
+            film.setGenres(Map.of("id", filmGenre.get(id)));
+            film.setMpa(Map.of("id", filmRating.get(id)));
             return film;
         } else {
             log.error("Exception", new ConditionsNotMetException(id.toString(), "Идентификатор фильма не может быть нулевой"));
@@ -125,9 +145,11 @@ public class FilmDbStorage implements FilmStorage {
                     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName("film").usingGeneratedKeyColumns("id");
                     Long f = simpleJdbcInsert.executeAndReturnKey(film.toMapFilm()).longValue();
                     String sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
-                    for (Long l : film.getGenres()) {
+                    for (Long l : film.getGenres().get("id")) {
                         jdbcTemplate.update(sqlQuery, f, l);
                     }
+                    sqlQuery = "update film set " + "ratingId = ? " + "where id = ?";
+                    jdbcTemplate.update(sqlQuery, film.getMpa().get("id"), f);
                     return findById(f);
                 }
             } else {
@@ -174,15 +196,15 @@ public class FilmDbStorage implements FilmStorage {
                                 throw new ConditionsNotMetException(newFilm.getDuration().toString(), "Продолжительность фильма должна быть положительным числом");
                             } else {
                                 oldFilm.setDuration(newFilm.getDuration());
-                                if (oldFilm.getRatingId() != newFilm.getRatingId() && newFilm.getRatingId() > 0 && newFilm.getRatingId() < 6)
-                                    oldFilm.setRatingId(newFilm.getRatingId());
-                                oldFilm.setRatingId(newFilm.getRatingId());
+                                if (oldFilm.getMpa().get("id") != newFilm.getMpa().get("id") && newFilm.getMpa().get("id") > 0 && newFilm.getMpa().get("id") < 6)
+                                    oldFilm.setMpa(newFilm.getMpa());
+                                //oldFilm.setRatingId(newFilm.getRatingId());
                                 String sqlQuery = "delete from filmGenre where filmId = ?";
                                 jdbcTemplate.update(sqlQuery, newFilm.getId());
                                 String sqlQuery500 = "update film set " + "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + "where id = ?";
-                                jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getRatingId(), oldFilm.getId());
+                                jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa().get("id"), oldFilm.getId());
                                 String sqlQuery501 = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
-                                for (Long l : oldFilm.getGenres()) {
+                                for (Long l : oldFilm.getGenres().get("id")) {
                                     jdbcTemplate.update(sqlQuery501, oldFilm.getId(), l);
                                 }
                                 return oldFilm;
