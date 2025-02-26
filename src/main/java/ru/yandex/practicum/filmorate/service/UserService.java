@@ -43,7 +43,7 @@ public class UserService implements UserInterface {
             throw new NotFoundException(idFriend.toString(), "Пользователь с данным идентификатором отсутствует в базе");
         }
         String sqlQuery = "insert into friends(userId, friendId) " + "values (?, ?)";
-        jdbcTemplate.update(sqlQuery, idUser, idFriend);
+        jdbcTemplate.update(sqlQuery, idFriend, idUser);
         return userStorage.findById(idUser);
 
     }
