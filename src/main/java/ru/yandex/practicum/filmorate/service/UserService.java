@@ -84,6 +84,7 @@ public class UserService implements UserInterface {
             log.error("Exception", new NotFoundException(idUser.toString(), "Пользователь с данным идентификатором отсутствует в базе"));
             throw new NotFoundException(idUser.toString(), "Пользователь с данным идентификатором отсутствует в базе");
         }
-        return friends.get(idUser);
+        if (friends.get(idUser) == null) return new HashSet<>();
+        else return friends.get(idUser);
     }
 }

@@ -34,7 +34,7 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
 
     private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
-        return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("releaseDate").toLocalDate()).duration(resultSet.getInt("duration")).likedUsers(new HashSet<>()).genres(new HashSet<>()).mpa(resultSet.getLong("ratingId")).build();
+        return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("releaseDate").toLocalDate()).duration(resultSet.getInt("duration")).likedUsers(new HashSet<>()).genres(new HashSet<>()).ratingId(resultSet.getLong("ratingId")).build();
     }
 
     public static class LikedUsersExtractor implements ResultSetExtractor<Map<Long, Set<Long>>> {
@@ -174,13 +174,13 @@ public class FilmDbStorage implements FilmStorage {
                                 throw new ConditionsNotMetException(newFilm.getDuration().toString(), "Продолжительность фильма должна быть положительным числом");
                             } else {
                                 oldFilm.setDuration(newFilm.getDuration());
-                                if (oldFilm.getMpa() != newFilm.getMpa() && newFilm.getMpa() > 0 && newFilm.getMpa() < 6)
-                                    oldFilm.setMpa(newFilm.getMpa());
-                                oldFilm.setMpa(newFilm.getMpa());
+                                if (oldFilm.getRatingId() != newFilm.getRatingId() && newFilm.getRatingId() > 0 && newFilm.getRatingId() < 6)
+                                    oldFilm.setRatingId(newFilm.getRatingId());
+                                oldFilm.setRatingId(newFilm.getRatingId());
                                 String sqlQuery = "delete from filmGenre where filmId = ?";
                                 jdbcTemplate.update(sqlQuery, newFilm.getId());
                                 String sqlQuery500 = "update film set " + "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + "where id = ?";
-                                jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa(), oldFilm.getId());
+                                jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getRatingId(), oldFilm.getId());
                                 String sqlQuery501 = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
                                 for (Long l : oldFilm.getGenres()) {
                                     jdbcTemplate.update(sqlQuery501, oldFilm.getId(), l);
