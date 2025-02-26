@@ -71,6 +71,10 @@ public class UserService implements UserInterface {
         log.info("Обработка Get-запроса...");
         String sqlQuery2 = "select userId, friendId from friends";
         Map<Long, Set<Long>> friends = jdbcTemplate.query(sqlQuery2, new UserDbStorage.FriendsExtractor());
+        if (userStorage.findById(idUser) == null) {
+            log.error("Exception", new NotFoundException(idUser.toString(), "Пользователь с данным идентификатором отсутствует в базе"));
+            throw new NotFoundException(idUser.toString(), "Пользователь с данным идентификатором отсутствует в базе");
+        }
         return friends.get(idUser);
     }
 }
