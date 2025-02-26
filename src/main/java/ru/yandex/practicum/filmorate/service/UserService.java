@@ -38,6 +38,10 @@ public class UserService implements UserInterface {
             log.error("Exception", new ConditionsNotMetException(idFriend.toString(), "Пользователь с данным идентификатором уже добавлен в друзья"));
             throw new ConditionsNotMetException(idFriend.toString(), "Пользователь с данным идентификатором уже добавлен в друзья");
         }
+        if (userStorage.findById(idFriend) == null) {
+            log.error("Exception", new NotFoundException(idFriend.toString(), "Пользователь с данным идентификатором отсутствует в базе"));
+            throw new NotFoundException(idFriend.toString(), "Пользователь с данным идентификатором отсутствует в базе");
+        }
         String sqlQuery = "insert into friends(userId, friendId) " + "values (?, ?)";
         jdbcTemplate.update(sqlQuery, idUser, idFriend);
         return userStorage.findById(idUser);
