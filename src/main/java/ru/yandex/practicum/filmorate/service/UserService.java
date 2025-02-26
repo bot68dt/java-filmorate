@@ -66,7 +66,7 @@ public class UserService implements UserInterface {
     }
 
     @Override
-    public Set<Long> findJointFriends(Long idUser, Long idFriend) throws NotFoundException {
+    public Set<User> findJointFriends(Long idUser, Long idFriend) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         String sqlQuery2 = "select userId, friendId from friends";
         Map<Long, Set<Long>> friends = jdbcTemplate.query(sqlQuery2, new UserDbStorage.FriendsExtractor());
@@ -75,7 +75,7 @@ public class UserService implements UserInterface {
         Set<User> set = new HashSet<>();
         for (Long f : result)
             set.add(userStorage.findById(f));
-        return result;
+        return set;
     }
 
     @Override

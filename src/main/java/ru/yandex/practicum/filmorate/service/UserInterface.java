@@ -9,7 +9,7 @@ public interface UserInterface {
 
     public User delFriend(Long idUser, Long idFriend);
 
-    public Set<Long> findJointFriends(Long idUser, Long idFriend);
+    public Set<User> findJointFriends(Long idUser, Long idFriend);
 
     public Set<User> findAllFriends(Long idUser);
 }
