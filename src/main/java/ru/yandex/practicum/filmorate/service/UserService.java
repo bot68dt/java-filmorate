@@ -44,6 +44,7 @@ public class UserService implements UserInterface {
         }
         String sqlQuery = "insert into friends(userId, friendId) " + "values (?, ?)";
         jdbcTemplate.update(sqlQuery, idUser, idFriend);
+        jdbcTemplate.update(sqlQuery, idFriend, idUser);
         return userStorage.findById(idUser);
 
     }
@@ -53,6 +54,14 @@ public class UserService implements UserInterface {
         log.info("Обработка Del-запроса...");
         String sqlQuery = "delete from friends where userId = ? and friendId = ?";
         jdbcTemplate.update(sqlQuery, idUser, idFriend);
+        if (userStorage.findById(idUser) == null) {
+            log.error("Exception", new NotFoundException(idUser.toString(), "Пользователь с данным идентификатором отсутствует в базе"));
+            throw new NotFoundException(idUser.toString(), "Пользователь с данным идентификатором отсутствует в базе");
+        }
+        if (userStorage.findById(idFriend) == null) {
+            log.error("Exception", new NotFoundException(idUser.toString(), "Пользователь с данным идентификатором отсутствует в базе"));
+            throw new NotFoundException(idUser.toString(), "Пользователь с данным идентификатором отсутствует в базе");
+        }
         return userStorage.findById(idUser);
     }
 
