@@ -72,6 +72,9 @@ public class UserService implements UserInterface {
         Map<Long, Set<Long>> friends = jdbcTemplate.query(sqlQuery2, new UserDbStorage.FriendsExtractor());
         Set<Long> result = new HashSet<>(friends.get(idUser));
         result.retainAll(friends.get(idFriend));
+        Set<User> set = new HashSet<>();
+        for (Long f : result)
+            set.add(userStorage.findById(f));
         return result;
     }
 
