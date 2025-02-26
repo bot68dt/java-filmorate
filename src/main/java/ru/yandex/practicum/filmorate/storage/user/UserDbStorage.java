@@ -97,7 +97,7 @@ public class UserDbStorage implements UserStorage {
         }
     }
 
-    public Long create(@Valid User user) throws ConditionsNotMetException, DuplicatedDataException {
+    public User create(@Valid User user) throws ConditionsNotMetException, DuplicatedDataException {
         log.info("Обработка Create-запроса...");
         this.duplicateCheck(user);
         if (user.getEmail() != null && !user.getEmail().isBlank() && user.getEmail().contains("@") && !user.getEmail().contains(" ") && user.getEmail().length() != 1) {
@@ -112,7 +112,8 @@ public class UserDbStorage implements UserStorage {
                         throw new ConditionsNotMetException(user.getBirthday().format(this.formatter), "Дата рождения не может быть в будущем");
                     } else {
                         SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName("users").usingGeneratedKeyColumns("id");
-                        return simpleJdbcInsert.executeAndReturnKey(user.toMapUser()).longValue();
+                        Long f = simpleJdbcInsert.executeAndReturnKey(user.toMapUser()).longValue();
+                        return findById(f);
                     }
                 } else {
                     log.error("Exception", new ConditionsNotMetException(user.getBirthday().toString(), "Дата рождения не может быть нулевой"));

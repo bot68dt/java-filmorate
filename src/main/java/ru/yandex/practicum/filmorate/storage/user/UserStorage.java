@@ -10,7 +10,7 @@ public interface UserStorage {
 
     public User findById(Long id);
 
-    public Long create(User user);
+    public User create(User user);
 
     public User update(User newUser);
 }

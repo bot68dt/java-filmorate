@@ -42,7 +42,7 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Long create(@Valid @RequestBody User user) throws ConditionsNotMetException, DuplicatedDataException {
+    public User create(@Valid @RequestBody User user) throws ConditionsNotMetException, DuplicatedDataException {
         return userStorage.create(user);
     }
 
