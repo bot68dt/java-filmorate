@@ -57,9 +57,14 @@ public class FilmController {
         String releaseDate = objectNode.get("releaseDate").asText();
         Integer duration = objectNode.get("duration").asInt();
         List<String> mpa = objectNode.get("mpa").findValuesAsText("id");
-        List<String> genres = objectNode.get("genres").findValuesAsText("id");
-        //return filmStorage.create(film);
-        return filmStorage.create(Buffer.of(Long.valueOf(0), name, description, LocalDate.parse(releaseDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")), duration, genres, Long.valueOf(mpa.get(0).toString())));
+        List<String> genres = new ArrayList<>();
+        try {
+            genres = objectNode.get("genres").findValuesAsText("id");
+        } catch (NullPointerException e) {
+            genres = List.of("нет жанра");
+        } finally {
+            return filmStorage.create(Buffer.of(Long.valueOf(0), name, description, LocalDate.parse(releaseDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")), duration, genres, Long.valueOf(mpa.get(0).toString())));
+        }
     }
 
     @PutMapping
@@ -70,8 +75,14 @@ public class FilmController {
         String releaseDate = objectNode.get("releaseDate").asText();
         Integer duration = objectNode.get("duration").asInt();
         List<String> mpa = objectNode.get("mpa").findValuesAsText("id");
-        List<String> genres = objectNode.get("genres").findValuesAsText("id");
-        return filmStorage.update(Buffer.of(id, name, description, LocalDate.parse(releaseDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")), duration, genres, Long.valueOf(mpa.get(0).toString())));
+        List<String> genres = new ArrayList<>();
+        try {
+            genres = objectNode.get("genres").findValuesAsText("id");
+        } catch (NullPointerException e) {
+            genres = List.of("нет жанра");
+        } finally {
+            return filmStorage.update(Buffer.of(id, name, description, LocalDate.parse(releaseDate, DateTimeFormatter.ofPattern("yyyy-MM-dd")), duration, genres, Long.valueOf(mpa.get(0).toString())));
+        }
     }
 
     @PutMapping("/{id}/like/{userId}")

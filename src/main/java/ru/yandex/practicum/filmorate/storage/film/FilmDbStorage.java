@@ -140,7 +140,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film create(@Valid Buffer buffer) throws ConditionsNotMetException, NullPointerException {
         log.info("Обработка Create-запроса...");
-        if (buffer.getName() != null && !buffer.getName().isBlank()) {
+        if (buffer.getName() != null && !buffer.getName().isBlank() && !buffer.getName().equals("")) {
             if (buffer.getDescription().length() > 200) {
                 log.error("Exception", new ConditionsNotMetException(buffer.getDescription(), "Максимальная длина описания — 200 символов"));
                 throw new ConditionsNotMetException(buffer.getDescription(), "Максимальная длина описания — 200 символов");
