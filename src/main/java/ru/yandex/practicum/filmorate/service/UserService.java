@@ -76,7 +76,7 @@ public class UserService implements UserInterface {
     }
 
     @Override
-    public Set<Long> findAllFriends(Long idUser) throws NotFoundException {
+    public Set<User> findAllFriends(Long idUser) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         String sqlQuery2 = "select userId, friendId from friends";
         Map<Long, Set<Long>> friends = jdbcTemplate.query(sqlQuery2, new UserDbStorage.FriendsExtractor());
@@ -85,6 +85,11 @@ public class UserService implements UserInterface {
             throw new NotFoundException(idUser.toString(), "Пользователь с данным идентификатором отсутствует в базе");
         }
         if (friends.get(idUser) == null) return new HashSet<>();
-        else return friends.get(idUser);
+        else {
+            Set<User> set = new HashSet<>();
+            for (Long f : friends.get(idUser))
+                set.add(userStorage.findById(f));
+            return set;
+        }
     }
 }

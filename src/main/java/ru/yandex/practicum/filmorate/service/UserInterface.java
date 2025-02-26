@@ -11,5 +11,5 @@ public interface UserInterface {
 
     public Set<Long> findJointFriends(Long idUser, Long idFriend);
 
-    public Set<Long> findAllFriends(Long idUser);
+    public Set<User> findAllFriends(Long idUser);
 }
