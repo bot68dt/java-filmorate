@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Buffer;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmRequest;
 import ru.yandex.practicum.filmorate.service.FilmInterface;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -51,7 +52,7 @@ public class FilmController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@Valid @RequestBody ObjectNode objectNode) throws ConditionsNotMetException, NullPointerException {
+    public FilmRequest create(@Valid @RequestBody ObjectNode objectNode) throws ConditionsNotMetException, NullPointerException {
         String name = objectNode.get("name").asText();
         String description = objectNode.get("description").asText();
         String releaseDate = objectNode.get("releaseDate").asText();

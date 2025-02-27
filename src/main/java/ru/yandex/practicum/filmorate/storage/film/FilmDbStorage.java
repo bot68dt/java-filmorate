@@ -13,8 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Buffer;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.*;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -139,7 +138,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Film create(@Valid Buffer buffer) throws ConditionsNotMetException, NullPointerException {
+    public FilmRequest create(@Valid Buffer buffer) throws ConditionsNotMetException, NullPointerException {
         log.info("Обработка Create-запроса...");
         if (buffer.getName() != null && !buffer.getName().isBlank() && !buffer.getName().equals("")) {
             if (buffer.getDescription().length() > 200) {
@@ -157,6 +156,7 @@ public class FilmDbStorage implements FilmStorage {
                     throw new NotFoundException(buffer.getMpa().toString(), "Некорректный рейтинг");
                 } else {
                     List<Long> genres;
+                    LinkedHashSet<Genre> genres1 = new LinkedHashSet<>();
                     String sqlQuery;
                     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName("film").usingGeneratedKeyColumns("id");
                     Long f = simpleJdbcInsert.executeAndReturnKey(buffer.toMapBuffer()).longValue();
@@ -171,11 +171,14 @@ public class FilmDbStorage implements FilmStorage {
                         sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
                         for (Long g : genres) {
                             jdbcTemplate.update(sqlQuery, f, g);
+                            genres1.add(Genre.of(g));
                         }
                     }
                     sqlQuery = "update film set " + "ratingId = ? " + "where id = ?";
                     jdbcTemplate.update(sqlQuery, buffer.getMpa(), f);
-                    return findById(f);
+
+                    FilmRequest film = FilmRequest.of(buffer.getId(), buffer.getName(), buffer.getDescription(), buffer.getReleaseDate(), buffer.getDuration(), new HashSet<>(), Mpa.of(buffer.getMpa()), genres1);
+                    return film;
                 }
             } else {
                 log.error("Exception", new NullPointerException("Продолжительность фильма не может быть нулевой"));
