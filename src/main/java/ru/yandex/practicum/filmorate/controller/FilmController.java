@@ -87,12 +87,12 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public FilmRequest addLike(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("userId") Long userId) throws ConditionsNotMetException {
+    public FilmRequest addLike(@Valid @PathVariable("id") Long id, @PathVariable("userId") Long userId) throws ConditionsNotMetException {
         return filmInterface.addLike(userId, id);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public FilmRequest delLike(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("userId") Long userId) throws NotFoundException {
+    public FilmRequest delLike(@Valid @PathVariable("id") Long id, @PathVariable("userId") Long userId) throws NotFoundException {
         return filmInterface.delLike(userId, id);
     }
 

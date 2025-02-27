@@ -52,22 +52,22 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public User addFriend(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("friendId") Long friendId) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
+    public User addFriend(@Valid @PathVariable("id") Long id, @PathVariable("friendId") Long friendId) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
         return userInterface.addFriend(id, friendId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    public User delFriend(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("friendId") Long friendId) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
-        return userInterface.delFriend(id,friendId);
+    public User delFriend(@Valid @PathVariable("id") Long id, @PathVariable("friendId") Long friendId) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
+        return userInterface.delFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public Set<User> findJointFriends(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("otherId") Long otherId) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
+    public Set<User> findJointFriends(@Valid @PathVariable("id") Long id, @PathVariable("otherId") Long otherId) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
         return userInterface.findJointFriends(id, otherId);
     }
 
     @GetMapping("/{id}/friends")
-    public Set<User> findJointFriends(@Valid @RequestBody @PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
+    public Set<User> findJointFriends(@Valid @PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException, DuplicatedDataException {
         return userInterface.findAllFriends(id);
     }
 }

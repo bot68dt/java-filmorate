@@ -44,7 +44,6 @@ public class UserService implements UserInterface {
         }
         String sqlQuery = "insert into friends(userId, friendId) " + "values (?, ?)";
         jdbcTemplate.update(sqlQuery, idUser, idFriend);
-        //jdbcTemplate.update(sqlQuery, idFriend, idUser);
         return userStorage.findById(idUser);
 
     }

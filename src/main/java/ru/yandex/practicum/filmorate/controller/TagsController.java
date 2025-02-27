@@ -14,7 +14,6 @@ import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 import java.util.*;
 
 @RestController
-//@RequestMapping("/films")
 
 public class TagsController {
     @Autowired
