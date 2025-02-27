@@ -15,8 +15,6 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Buffer;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -55,13 +53,13 @@ public class FilmDbStorage implements FilmStorage {
         }
     }
 
-    public static class FilmGenreExtractor implements ResultSetExtractor<Map<Long, Set<Long>>> {
+    public static class FilmGenreExtractor implements ResultSetExtractor<Map<Long, LinkedHashSet<Long>>> {
         @Override
-        public Map<Long, Set<Long>> extractData(ResultSet rs) throws SQLException {
-            Map<Long, Set<Long>> data = new LinkedHashMap<>();
+        public Map<Long, LinkedHashSet<Long>> extractData(ResultSet rs) throws SQLException {
+            Map<Long, LinkedHashSet<Long>> data = new LinkedHashMap<>();
             while (rs.next()) {
                 Long filmId = rs.getLong("filmId");
-                data.putIfAbsent(filmId, new HashSet<>());
+                data.putIfAbsent(filmId, new LinkedHashSet<>());
                 Long genreId = rs.getLong("genreId");
                 data.get(filmId).add(genreId);
             }
@@ -91,16 +89,16 @@ public class FilmDbStorage implements FilmStorage {
         String sqlQuery2 = "select filmId, userId from likedUsers";
         Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(sqlQuery2, new LikedUsersExtractor());
         String sqlQuery3 = "select filmId, genreId from filmGenre";
-        Map<Long, Set<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmGenreExtractor());
+        Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmGenreExtractor());
         sqlQuery3 = "select id, ratingId from film";
         Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor());
         for (Film film : films) {
             film.setLikedUsers(likedUsers.get(film.getId()));
-            LinkedHashSet<Genre> genres = new LinkedHashSet<>();
-            for (Long g : filmGenre.get(film.getId()))
-                genres.add(Genre.of(g));
-            film.setGenres(genres);
-            film.setMpa(Mpa.of(filmRating.get(film.getId())));
+            //LinkedHashSet<Long> genres = new LinkedHashSet<>();
+            //for (Long g : filmGenre.get(film.getId()))
+            //    genres.add(Genre.of(g));
+            film.setGenres(filmGenre.get(film.getId()));
+            film.setMpa(filmRating.get(film.getId()));
         }
         return films;
     }
@@ -121,17 +119,18 @@ public class FilmDbStorage implements FilmStorage {
             String sqlQuery2 = "select filmId, userId from likedUsers where filmId = ?";
             Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(sqlQuery2, new LikedUsersExtractor(), id);
             String sqlQuery3 = "select filmId, genreId from filmGenre where filmId = ?";
-            Map<Long, Set<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmGenreExtractor(), id);
+            Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmGenreExtractor(), id);
             sqlQuery3 = "select id, ratingId from film where id = ?";
             Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor(), id);
             film.setLikedUsers(likedUsers.get(id));
-            LinkedHashSet<Genre> genres = new LinkedHashSet<>();
+            film.setGenres(filmGenre.get(id));
+            /*LinkedHashSet<Genre> genres = new LinkedHashSet<>();
             if (!filmGenre.isEmpty()) {
                 for (Long g : filmGenre.get(id))
                     genres.add(Genre.of(g));
                 film.setGenres(genres);
-            }
-            film.setMpa(Mpa.of(filmRating.get(id)));
+            }*/
+            film.setMpa(filmRating.get(id));
             return film;
         } else {
             log.error("Exception", new ConditionsNotMetException(id.toString(), "Идентификатор фильма не может быть нулевой"));
@@ -234,9 +233,9 @@ public class FilmDbStorage implements FilmStorage {
                                     }
                                 }
                                 if (!oldFilm.getMpa().equals(newFilm.getMpa()) && newFilm.getMpa() > 0 && newFilm.getMpa() < 6)
-                                    oldFilm.setMpa(Mpa.of(newFilm.getMpa()));
+                                    oldFilm.setMpa(newFilm.getMpa());
                                 String sqlQuery500 = "update film set " + "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + "where id = ?";
-                                jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa().getId(), oldFilm.getId());
+                                jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa(), oldFilm.getId());
                                 return findById(oldFilm.getId());
                             }
                         } else {

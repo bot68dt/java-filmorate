@@ -30,8 +30,8 @@ public class Film {
     private Integer duration;
     @JsonIgnore
     private Set<Long> likedUsers;
-    private Mpa mpa;
-    private LinkedHashSet<Genre> genres;
+    private Long mpa;
+    private LinkedHashSet<Long> genres;
 
     public Map<String, Object> toMapFilm() {
         Map<String, Object> values = new HashMap<>();
