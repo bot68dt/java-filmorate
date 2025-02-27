@@ -33,6 +33,12 @@ public class UserDbStorage implements UserStorage {
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final JdbcTemplate jdbcTemplate;
 
+    private final String sqlQuery1 = "select id, name, email, login, birthday from users";
+    private final String sqlQuery2 = "select userId, friendId from friends";
+    private final String sqlQuery3 = "select id, name, email, login, birthday from users where id = ?";
+    private final String sqlQuery4 = "select email from users";
+    private final String sqlQuery5 = "update users set " + "name = ?, email = ?, login = ?, birthday = ? " + "where id = ?";
+
     private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {
         return User.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).email(resultSet.getString("email")).login(resultSet.getString("login")).birthday(resultSet.getDate("birthday").toLocalDate()).friends(new HashSet<>()).friendRequests(new HashSet<>()).build();
     }
@@ -65,9 +71,7 @@ public class UserDbStorage implements UserStorage {
 
     public Collection<User> findAll() {
         log.info("Обработка Get-запроса...");
-        String sqlQuery1 = "select id, name, email, login, birthday from users";
         Collection<User> users = jdbcTemplate.query(sqlQuery1, this::mapRowToUser);
-        String sqlQuery2 = "select userId, friendId from friends";
         Map<Long, Set<Long>> friends = jdbcTemplate.query(sqlQuery2, new FriendsExtractor());
         for (User user : users) {
             user.setFriends(friends.get(user.getId()));
@@ -79,15 +83,14 @@ public class UserDbStorage implements UserStorage {
         log.info("Обработка Get-запроса...");
         if (id != 0 && !id.equals(null)) {
             try {
-                jdbcTemplate.queryForObject("select id, name, email, login, birthday from users where id = ?", this::mapRowToUser, id);
+                jdbcTemplate.queryForObject(sqlQuery3, this::mapRowToUser, id);
             } catch (DataAccessException e) {
                 if (e != null) {
                     log.error("Exception", new NotFoundException(id.toString(), "Пользователь с данным идентификатором отсутствует в базе"));
                     throw new NotFoundException(id.toString(), "Пользователь с данным идентификатором отсутствует в базе");
                 }
             }
-            User user = jdbcTemplate.queryForObject("select id, name, email, login, birthday from users where id = ?", this::mapRowToUser, id);
-            String sqlQuery2 = "select userId, friendId from friends";
+            User user = jdbcTemplate.queryForObject(sqlQuery3, this::mapRowToUser, id);
             Map<Long, Set<Long>> friends = jdbcTemplate.query(sqlQuery2, new FriendsExtractor());
             user.setFriends(friends.get(id));
             return user;
@@ -130,8 +133,7 @@ public class UserDbStorage implements UserStorage {
     }
 
     private void duplicateCheck(User user) throws DuplicatedDataException {
-        String sqlQuery2 = "select email from users";
-        Set<String> emails = jdbcTemplate.query(sqlQuery2, new EmailExtractor());
+        Set<String> emails = jdbcTemplate.query(sqlQuery4, new EmailExtractor());
         if (emails.contains(user.getEmail())) {
             log.error("Exception", new DuplicatedDataException(user.getEmail(), "Этот имейл уже используется"));
             throw new DuplicatedDataException(user.getEmail(), "Этот имейл уже используется");
@@ -144,14 +146,14 @@ public class UserDbStorage implements UserStorage {
             throw new ConditionsNotMetException("NULL", "Id должен быть указан");
         } else {
             try {
-                jdbcTemplate.queryForObject("select id, name, email, login, birthday from users where id = ?", this::mapRowToUser, newUser.getId());
+                jdbcTemplate.queryForObject(sqlQuery3, this::mapRowToUser, newUser.getId());
             } catch (DataAccessException e) {
                 if (e != null) {
                     log.error("Exception", new NotFoundException(newUser.getId().toString(), "Пользователь с указанным id не найден"));
                     throw new NotFoundException(newUser.getId().toString(), "Пользователь с указанным id не найден");
                 }
             }
-            User oldUser = jdbcTemplate.queryForObject("select id, name, email, login, birthday from users where id = ?", this::mapRowToUser, newUser.getId());
+            User oldUser = jdbcTemplate.queryForObject(sqlQuery3, this::mapRowToUser, newUser.getId());
             if (newUser.getEmail() != null && !newUser.getEmail().isBlank() && newUser.getEmail().contains("@") && !newUser.getEmail().contains(" ") && newUser.getEmail().length() != 1) {
                 if (!newUser.getEmail().equals(oldUser.getEmail())) {
                     this.duplicateCheck(newUser);
@@ -172,8 +174,7 @@ public class UserDbStorage implements UserStorage {
                             throw new ConditionsNotMetException(newUser.getBirthday().format(this.formatter), "Дата рождения не может быть в будущем");
                         } else {
                             oldUser.setBirthday(newUser.getBirthday());
-                            String sqlQuery500 = "update users set " + "name = ?, email = ?, login = ?, birthday = ? " + "where id = ?";
-                            jdbcTemplate.update(sqlQuery500, oldUser.getName(), oldUser.getEmail(), oldUser.getLogin(), oldUser.getBirthday(), oldUser.getId());
+                            jdbcTemplate.update(sqlQuery5, oldUser.getName(), oldUser.getEmail(), oldUser.getLogin(), oldUser.getBirthday(), oldUser.getId());
                             return oldUser;
                         }
                     } else {

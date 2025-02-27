@@ -152,19 +152,6 @@ public class FilmService implements FilmInterface {
         } else return GenreConstant.of(id, genre.get(id));
     }
 
-    public static class RatingExtractor implements ResultSetExtractor<Map<Long, Long>> {
-        @Override
-        public Map<Long, Long> extractData(ResultSet rs) throws SQLException {
-            Map<Long, Long> data = new HashMap<>();
-            while (rs.next()) {
-                Long id = rs.getLong("id");
-                Long rating = rs.getLong("ratingId");
-                data.put(id, rating);
-            }
-            return data;
-        }
-    }
-
     @Override
     public List<MpaConstant> viewFilmsRating() throws NotFoundException {
         log.info("Обработка Get-запроса...");

@@ -37,6 +37,21 @@ public class FilmDbStorage implements FilmStorage {
     private final JdbcTemplate jdbcTemplate;
     private FilmInterface filmInterface;
 
+    private final String sqlQuery1 = "select id, name, description, releaseDate, duration from film";
+    private final String sqlQuery2 = "select filmId, userId from likedUsers";
+    private final String sqlQuery3 = "select filmId, genreId from filmGenre";
+    private final String sqlQuery4 = "select id, ratingId from film";
+    private final String sqlQuery5 = "select id, name, description, releaseDate, duration from film where id = ?";
+    private final String sqlQuery6 = "select filmId, userId from likedUsers where filmId = ?";
+    private final String sqlQuery7 = "select filmId, genreId from filmGenre where filmId = ?";
+    private final String sqlQuery8 = "select id, ratingId from film where id = ?";
+    private final String sqlQuery9 = "select id, name from genre";
+    private final String sqlQuery10 = "select id, rating from filmrating";
+    private final String sqlQuery11 = "delete from filmGenre where filmId = ?";
+    private final String sqlQuery12 = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
+    private final String sqlQuery13 = "update film set " + "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + "where id = ?";
+    private final String sqlQuery14 = "update film set " + "ratingId = ? " + "where id = ?";
+
     private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
         return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("releaseDate").toLocalDate()).duration(resultSet.getInt("duration")).build();
     }
@@ -86,14 +101,10 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> findAll() {
         log.info("Обработка Get-запроса...");
-        String sqlQuery1 = "select id, name, description, releaseDate, duration from film";
         List<Film> films = jdbcTemplate.query(sqlQuery1, this::mapRowToFilm);
-        String sqlQuery2 = "select filmId, userId from likedUsers";
         Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(sqlQuery2, new LikedUsersExtractor());
-        String sqlQuery3 = "select filmId, genreId from filmGenre";
         Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmGenreExtractor());
-        sqlQuery3 = "select id, ratingId from film";
-        Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor());
+        Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery4, new FilmRatingExtractor());
         for (Film film : films) {
             film.setLikedUsers(likedUsers.get(film.getId()));
             film.setGenres(filmGenre.get(film.getId()));
@@ -107,26 +118,21 @@ public class FilmDbStorage implements FilmStorage {
         log.info("Обработка Get-запроса...");
         if (id != 0 && !id.equals(null)) {
             try {
-                jdbcTemplate.queryForObject("select id, name, description, releaseDate, duration from film where id = ?", this::mapRowToFilm, id);
+                jdbcTemplate.queryForObject(sqlQuery5, this::mapRowToFilm, id);
             } catch (DataAccessException e) {
                 if (e != null) {
                     log.error("Exception", new NotFoundException(id.toString(), "Идентификатор фильма отсутствует в базе"));
                     throw new NotFoundException(id.toString(), "Идентификатор фильма отсутствует в базе");
                 }
             }
-            Film film = jdbcTemplate.queryForObject("select id, name, description, releaseDate, duration from film where id = ?", this::mapRowToFilm, id);
-            String sqlQuery2 = "select filmId, userId from likedUsers where filmId = ?";
-            Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(sqlQuery2, new LikedUsersExtractor(), id);
-            String sqlQuery3 = "select filmId, genreId from filmGenre where filmId = ?";
-            Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmGenreExtractor(), id);
-            sqlQuery3 = "select id, ratingId from film where id = ?";
-            Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor(), id);
+            Film film = jdbcTemplate.queryForObject(sqlQuery5, this::mapRowToFilm, id);
+            Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(sqlQuery6, new LikedUsersExtractor(), id);
+            Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(sqlQuery7, new FilmGenreExtractor(), id);
+            Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery8, new FilmRatingExtractor(), id);
             film.setLikedUsers(likedUsers.get(id));
             film.setGenres(filmGenre.get(id));
-            sqlQuery3 = "select id, name from genre";
-            Map<Long, String> genre = jdbcTemplate.query(sqlQuery3, new FilmService.GenreExtractor());
-            sqlQuery3 = "select id, rating from filmrating";
-            Map<Long, String> rating = jdbcTemplate.query(sqlQuery3, new FilmService.RatingNameExtractor());
+            Map<Long, String> genre = jdbcTemplate.query(sqlQuery9, new FilmService.GenreExtractor());
+            Map<Long, String> rating = jdbcTemplate.query(sqlQuery10, new FilmService.RatingNameExtractor());
             LinkedHashSet<Genre> genres = new LinkedHashSet<>();
             if (!filmGenre.isEmpty()) {
                 for (Long g : filmGenre.get(id))
@@ -163,10 +169,8 @@ public class FilmDbStorage implements FilmStorage {
                     String sqlQuery;
                     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName("film").usingGeneratedKeyColumns("id");
                     Long f = simpleJdbcInsert.executeAndReturnKey(buffer.toMapBuffer()).longValue();
-                    sqlQuery = "select id, name from genre";
-                    Map<Long, String> genre = jdbcTemplate.query(sqlQuery, new FilmService.GenreExtractor());
-                    sqlQuery = "select id, rating from filmrating";
-                    Map<Long, String> rating = jdbcTemplate.query(sqlQuery, new FilmService.RatingNameExtractor());
+                    Map<Long, String> genre = jdbcTemplate.query(sqlQuery9, new FilmService.GenreExtractor());
+                    Map<Long, String> rating = jdbcTemplate.query(sqlQuery10, new FilmService.RatingNameExtractor());
                     if (!buffer.getGenres().equals(List.of("нет жанра"))) {
                         genres = buffer.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
                         for (Long g : genres) {
@@ -175,14 +179,12 @@ public class FilmDbStorage implements FilmStorage {
                                 throw new NotFoundException(g.toString(), "Некорректный жанр");
                             }
                         }
-                        sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
                         for (Long g : genres) {
-                            jdbcTemplate.update(sqlQuery, f, g);
+                            jdbcTemplate.update(sqlQuery12, f, g);
                             genres1.add(Genre.of(g, genre.get(g)));
                         }
                     }
-                    sqlQuery = "update film set " + "ratingId = ? " + "where id = ?";
-                    jdbcTemplate.update(sqlQuery, buffer.getMpa(), f);
+                    jdbcTemplate.update(sqlQuery14, buffer.getMpa(), f);
 
                     FilmRequest film = FilmRequest.of(f, buffer.getName(), buffer.getDescription(), buffer.getReleaseDate(), buffer.getDuration(), new HashSet<>(), Mpa.of(buffer.getMpa(), rating.get(buffer.getMpa())), genres1);
                     return film;
@@ -228,10 +230,8 @@ public class FilmDbStorage implements FilmStorage {
                                     throw new NotFoundException(newFilm.getMpa().toString(), "Некорректный рейтинг");
                                 }
                                 LinkedHashSet<Genre> genres1 = new LinkedHashSet<>();
-                                String sqlQuery = "select id, name from genre";
-                                Map<Long, String> genre = jdbcTemplate.query(sqlQuery, new FilmService.GenreExtractor());
-                                sqlQuery = "select id, rating from filmrating";
-                                Map<Long, String> rating = jdbcTemplate.query(sqlQuery, new FilmService.RatingNameExtractor());
+                                Map<Long, String> genre = jdbcTemplate.query(sqlQuery9, new FilmService.GenreExtractor());
+                                Map<Long, String> rating = jdbcTemplate.query(sqlQuery10, new FilmService.RatingNameExtractor());
                                 if (!newFilm.getGenres().equals(List.of("нет жанра"))) {
                                     List<Long> genres = newFilm.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
                                     for (Long g : genres) {
@@ -240,18 +240,15 @@ public class FilmDbStorage implements FilmStorage {
                                             throw new NotFoundException(g.toString(), "Некорректный жанр");
                                         }
                                     }
-                                    sqlQuery = "delete from filmGenre where filmId = ?";
-                                    jdbcTemplate.update(sqlQuery, oldFilm.getId());
-                                    sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
+                                    jdbcTemplate.update(sqlQuery11, oldFilm.getId());
                                     for (Long g : genres) {
-                                        jdbcTemplate.update(sqlQuery, oldFilm.getId(), g);
+                                        jdbcTemplate.update(sqlQuery12, oldFilm.getId(), g);
                                         genres1.add(Genre.of(g, genre.get(g)));
                                     }
                                 }
                                 if (!oldFilm.getMpa().equals(newFilm.getMpa()) && newFilm.getMpa() > 0 && newFilm.getMpa() < 6)
                                     oldFilm.setMpa(Mpa.of(newFilm.getMpa(), rating.get(newFilm.getMpa())));
-                                String sqlQuery500 = "update film set " + "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + "where id = ?";
-                                jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa().getId(), oldFilm.getId());
+                                jdbcTemplate.update(sqlQuery13, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa().getId(), oldFilm.getId());
                                 return FilmRequest.of(oldFilm.getId(), oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), new HashSet<>(), oldFilm.getMpa(),genres1);
                             }
                         } else {
