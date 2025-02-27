@@ -14,6 +14,8 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.service.FilmInterface;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -33,6 +35,7 @@ public class FilmDbStorage implements FilmStorage {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private final JdbcTemplate jdbcTemplate;
+    private FilmInterface filmInterface;
 
     private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
         return Film.builder().id(resultSet.getLong("id")).name(resultSet.getString("name")).description(resultSet.getString("description")).releaseDate(resultSet.getDate("releaseDate").toLocalDate()).duration(resultSet.getInt("duration")).build();
@@ -120,13 +123,17 @@ public class FilmDbStorage implements FilmStorage {
             Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor(), id);
             film.setLikedUsers(likedUsers.get(id));
             film.setGenres(filmGenre.get(id));
+            sqlQuery3 = "select id, name from genre";
+            Map<Long, String> genre = jdbcTemplate.query(sqlQuery3, new FilmService.GenreExtractor());
+            sqlQuery3 = "select id, rating from filmrating";
+            Map<Long, String> rating = jdbcTemplate.query(sqlQuery3, new FilmService.RatingNameExtractor());
             LinkedHashSet<Genre> genres = new LinkedHashSet<>();
             if (!filmGenre.isEmpty()) {
                 for (Long g : filmGenre.get(id))
-                    genres.add(Genre.of(g));
+                    genres.add(Genre.of(g, genre.get(g)));
             }
             film.setMpa(filmRating.get(id));
-            return FilmRequest.of(film.getId(), film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), new HashSet<>(), Mpa.of(film.getMpa()), genres);
+            return FilmRequest.of(film.getId(), film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), new HashSet<>(), Mpa.of(film.getMpa(),rating.get(film.getMpa())), genres);
         } else {
             log.error("Exception", new ConditionsNotMetException(id.toString(), "Идентификатор фильма не может быть нулевой"));
             throw new ConditionsNotMetException(id.toString(), "Идентификатор фильма не может быть нулевой");
@@ -156,6 +163,10 @@ public class FilmDbStorage implements FilmStorage {
                     String sqlQuery;
                     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName("film").usingGeneratedKeyColumns("id");
                     Long f = simpleJdbcInsert.executeAndReturnKey(buffer.toMapBuffer()).longValue();
+                    sqlQuery = "select id, name from genre";
+                    Map<Long, String> genre = jdbcTemplate.query(sqlQuery, new FilmService.GenreExtractor());
+                    sqlQuery = "select id, rating from filmrating";
+                    Map<Long, String> rating = jdbcTemplate.query(sqlQuery, new FilmService.RatingNameExtractor());
                     if (!buffer.getGenres().equals(List.of("нет жанра"))) {
                         genres = buffer.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
                         for (Long g : genres) {
@@ -167,13 +178,13 @@ public class FilmDbStorage implements FilmStorage {
                         sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
                         for (Long g : genres) {
                             jdbcTemplate.update(sqlQuery, f, g);
-                            genres1.add(Genre.of(g));
+                            genres1.add(Genre.of(g, genre.get(g)));
                         }
                     }
                     sqlQuery = "update film set " + "ratingId = ? " + "where id = ?";
                     jdbcTemplate.update(sqlQuery, buffer.getMpa(), f);
 
-                    FilmRequest film = FilmRequest.of(f, buffer.getName(), buffer.getDescription(), buffer.getReleaseDate(), buffer.getDuration(), new HashSet<>(), Mpa.of(buffer.getMpa()), genres1);
+                    FilmRequest film = FilmRequest.of(f, buffer.getName(), buffer.getDescription(), buffer.getReleaseDate(), buffer.getDuration(), new HashSet<>(), Mpa.of(buffer.getMpa(), rating.get(buffer.getMpa())), genres1);
                     return film;
                 }
             } else {
@@ -217,6 +228,10 @@ public class FilmDbStorage implements FilmStorage {
                                     throw new NotFoundException(newFilm.getMpa().toString(), "Некорректный рейтинг");
                                 }
                                 LinkedHashSet<Genre> genres1 = new LinkedHashSet<>();
+                                String sqlQuery = "select id, name from genre";
+                                Map<Long, String> genre = jdbcTemplate.query(sqlQuery, new FilmService.GenreExtractor());
+                                sqlQuery = "select id, rating from filmrating";
+                                Map<Long, String> rating = jdbcTemplate.query(sqlQuery, new FilmService.RatingNameExtractor());
                                 if (!newFilm.getGenres().equals(List.of("нет жанра"))) {
                                     List<Long> genres = newFilm.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
                                     for (Long g : genres) {
@@ -225,16 +240,16 @@ public class FilmDbStorage implements FilmStorage {
                                             throw new NotFoundException(g.toString(), "Некорректный жанр");
                                         }
                                     }
-                                    String sqlQuery = "delete from filmGenre where filmId = ?";
+                                    sqlQuery = "delete from filmGenre where filmId = ?";
                                     jdbcTemplate.update(sqlQuery, oldFilm.getId());
                                     sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
                                     for (Long g : genres) {
                                         jdbcTemplate.update(sqlQuery, oldFilm.getId(), g);
-                                        genres1.add(Genre.of(g));
+                                        genres1.add(Genre.of(g, genre.get(g)));
                                     }
                                 }
                                 if (!oldFilm.getMpa().equals(newFilm.getMpa()) && newFilm.getMpa() > 0 && newFilm.getMpa() < 6)
-                                    oldFilm.setMpa(Mpa.of(newFilm.getMpa()));
+                                    oldFilm.setMpa(Mpa.of(newFilm.getMpa(), rating.get(newFilm.getMpa())));
                                 String sqlQuery500 = "update film set " + "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + "where id = ?";
                                 jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa().getId(), oldFilm.getId());
                                 return FilmRequest.of(oldFilm.getId(), oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), new HashSet<>(), oldFilm.getMpa(),genres1);

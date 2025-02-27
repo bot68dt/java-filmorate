@@ -9,4 +9,5 @@ import lombok.EqualsAndHashCode;
 @AllArgsConstructor(staticName = "of")
 public class Mpa {
     Long id;
+    String name;
 }

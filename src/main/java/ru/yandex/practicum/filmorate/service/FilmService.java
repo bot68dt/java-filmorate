@@ -168,7 +168,7 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public List<MpaConstant> viewFilmsRating() throws NotFoundException {
+    public  List<MpaConstant> viewFilmsRating() throws NotFoundException {
         log.info("Обработка Get-запроса...");
         String sqlQuery3 = "select id, rating from filmrating";
         Map<Long, String> genre = jdbcTemplate.query(sqlQuery3, new RatingNameExtractor());
