@@ -99,24 +99,4 @@ public class FilmController {
     public LinkedHashSet<Film> viewRaiting(@RequestParam(required = false) Long count) throws NotFoundException {
         return filmInterface.viewRating(count);
     }
-
-    @GetMapping("/genres")
-    public Map<Long, Set<Long>> viewGenre() throws NotFoundException {
-        return filmInterface.viewGenre();
-    }
-
-    @GetMapping("/genres/{id}")
-    public Map<Long, String> viewGenreName(@PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException {
-        return filmInterface.viewGenreName(id);
-    }
-
-    @GetMapping("/mpa")
-    public Map<Long, Long> viewRating() throws NotFoundException {
-        return filmInterface.viewFilmsRating();
-    }
-
-    @GetMapping("/mpa/{id}")
-    public Map<Long, String> viewRatingName(@PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException {
-        return filmInterface.viewRatingName(id);
-    }
 }

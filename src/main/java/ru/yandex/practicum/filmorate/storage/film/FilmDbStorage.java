@@ -84,10 +84,10 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Collection<Film> findAll() {
+    public List<Film> findAll() {
         log.info("Обработка Get-запроса...");
         String sqlQuery1 = "select id, name, description, releaseDate, duration from film";
-        Collection<Film> films = jdbcTemplate.query(sqlQuery1, this::mapRowToFilm);
+        List<Film> films = jdbcTemplate.query(sqlQuery1, this::mapRowToFilm);
         String sqlQuery2 = "select filmId, userId from likedUsers";
         Map<Long, Set<Long>> likedUsers = jdbcTemplate.query(sqlQuery2, new LikedUsersExtractor());
         String sqlQuery3 = "select filmId, genreId from filmGenre";

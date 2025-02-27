@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.MpaConstant;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -144,14 +145,19 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public Map<Long, Long> viewFilmsRating() throws NotFoundException {
+    public List<Film> viewFilmsRating() throws NotFoundException {
         log.info("Обработка Get-запроса...");
         String sqlQuery3 = "select id, ratingId from film where ratingId IS NOT NULL";
         Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new RatingExtractor());
-        if (filmRating == null) {
+        if (filmRating.isEmpty()) {
             log.error("Exception", new NotFoundException("NULL", "Список фильмов с рейтингом пуст."));
             throw new NotFoundException("NULL", "Список фильмов с рейтингом пуст.");
-        } else return filmRating;
+        } else {
+            List<Film> films = new ArrayList<>();
+            for (Long l : filmRating.keySet())
+                films.add(filmStorage.findById(l));
+            return films;
+        }
     }
 
     public static class RatingNameExtractor implements ResultSetExtractor<Map<Long, String>> {
@@ -168,13 +174,13 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public Map<Long, String> viewRatingName(Long id) throws NotFoundException {
+    public MpaConstant viewRatingName(Long id) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         String sqlQuery3 = "select id, rating from filmrating where id = ?";
         Map<Long, String> genre = jdbcTemplate.query(sqlQuery3, new RatingNameExtractor(), id);
         if (genre == null) {
             log.error("Exception", new NotFoundException("NULL", "Рейтинг с указанным идентификатором не существует."));
             throw new NotFoundException("NULL", "Рейтинг с указанным идентификатором не существует.");
-        } else return genre;
+        } else return MpaConstant.of(id, genre.get(id));
     }
 }
