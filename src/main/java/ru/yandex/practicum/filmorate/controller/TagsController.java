@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -16,20 +15,11 @@ import java.util.*;
 @RestController
 
 public class TagsController {
-    @Autowired
-    @Qualifier("FilmDbStorage")
-    private final FilmStorage filmStorage;
-
-    @Autowired
-    @Qualifier("UserDbStorage")
-    private final UserStorage userStorage;
 
     private final FilmInterface filmInterface;
 
     @Autowired
     public TagsController(FilmStorage filmStorage, UserStorage userStorage, FilmInterface filmInterface) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
         this.filmInterface = filmInterface;
     }
 

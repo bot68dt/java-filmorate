@@ -32,14 +32,4 @@ public class Film {
     private Set<Long> likedUsers;
     private Long mpa;
     private LinkedHashSet<Long> genres;
-
-    public Map<String, Object> toMapFilm() {
-        Map<String, Object> values = new HashMap<>();
-        values.put("id", id);
-        values.put("name", name);
-        values.put("description", description);
-        values.put("releaseDate", releaseDate);
-        values.put("duration", duration);
-        return values;
-    }
 }
