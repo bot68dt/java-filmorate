@@ -10,9 +10,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.FilmRequest;
-import ru.yandex.practicum.filmorate.model.GenreConstant;
-import ru.yandex.practicum.filmorate.model.MpaConstant;
+import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
@@ -61,7 +59,15 @@ public class FilmService implements FilmInterface {
                 jdbcTemplate.update(sqlQuery, idFilm, idUser);
             }
         }
-        return filmStorage.findById(idFilm);
+        Film film = filmStorage.findById(idFilm);
+        String sqlQuery3 = "select filmId, genreId from filmGenre where filmId = ?";
+        LinkedHashSet genres = new LinkedHashSet<>();
+        Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmDbStorage.FilmGenreExtractor(), film.getId());
+        if (!filmGenre.isEmpty()) {
+            for (Long g : filmGenre.get(film.getId()))
+                genres.add(g);
+        }
+        return FilmRequest.of(film.getId(), film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), new HashSet<>(), Mpa.of(film.getMpa()), genres);
     }
 
     @Override
@@ -78,7 +84,15 @@ public class FilmService implements FilmInterface {
                 jdbcTemplate.update(sqlQuery, idFilm, idUser);
             }
         }
-        return filmStorage.findById(idFilm);
+        Film film = filmStorage.findById(idFilm);
+        String sqlQuery3 = "select filmId, genreId from filmGenre where filmId = ?";
+        LinkedHashSet genres = new LinkedHashSet<>();
+        Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmDbStorage.FilmGenreExtractor(), film.getId());
+        if (!filmGenre.isEmpty()) {
+            for (Long g : filmGenre.get(film.getId()))
+                genres.add(g);
+        }
+        return FilmRequest.of(film.getId(), film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), new HashSet<>(), Mpa.of(film.getMpa()), genres);
     }
 
     @Override
@@ -91,8 +105,16 @@ public class FilmService implements FilmInterface {
             log.error("Exception", new NotFoundException(count.toString(), "Список фильмов с рейтингом пуст."));
             throw new NotFoundException(count.toString(), "Список фильмов с рейтингом пуст.");
         } else {
-            for (Long l : likedUsers.keySet())
-                films.add(filmStorage.findById(l));
+            String sqlQuery3 = "select filmId, genreId from filmGenre where filmId = ?";
+            LinkedHashSet genres = new LinkedHashSet<>();
+            for (Long l : likedUsers.keySet()) {
+                Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmDbStorage.FilmGenreExtractor(), filmStorage.findById(l).getId());
+                if (!filmGenre.isEmpty()) {
+                    for (Long g : filmGenre.get(filmStorage.findById(l).getId()))
+                        genres.add(g);
+                }
+                films.add(FilmRequest.of(filmStorage.findById(l).getId(), filmStorage.findById(l).getName(), filmStorage.findById(l).getDescription(), filmStorage.findById(l).getReleaseDate(), filmStorage.findById(l).getDuration(), new HashSet<>(), Mpa.of(filmStorage.findById(l).getMpa()), genres));
+            }
         }
         return films;
     }
@@ -150,10 +172,10 @@ public class FilmService implements FilmInterface {
         log.info("Обработка Get-запроса...");
         String sqlQuery3 = "select id, rating from filmrating";
         Map<Long, String> genre = jdbcTemplate.query(sqlQuery3, new RatingNameExtractor());
-            List<MpaConstant> mpaConstant = new ArrayList<>();
-            for (Long l : genre.keySet())
-                mpaConstant.add(MpaConstant.of(l, genre.get(l)));
-            return mpaConstant;
+        List<MpaConstant> mpaConstant = new ArrayList<>();
+        for (Long l : genre.keySet())
+            mpaConstant.add(MpaConstant.of(l, genre.get(l)));
+        return mpaConstant;
     }
 
     public static class RatingNameExtractor implements ResultSetExtractor<Map<Long, String>> {
