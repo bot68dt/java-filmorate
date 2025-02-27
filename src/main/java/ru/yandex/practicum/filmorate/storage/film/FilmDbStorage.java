@@ -152,21 +152,25 @@ public class FilmDbStorage implements FilmStorage {
                     log.error("Exception", new ConditionsNotMetException(buffer.getDuration().toString(), "Продолжительность фильма должна быть положительным числом"));
                     throw new ConditionsNotMetException(buffer.getDuration().toString(), "Продолжительность фильма должна быть положительным числом");
                 } else if (!(buffer.getMpa() > 0 && buffer.getMpa() < 6)) {
-                    log.error("Exception", new ConditionsNotMetException(buffer.getMpa().toString(), "Некорректный рейтинг"));
-                    throw new ConditionsNotMetException(buffer.getMpa().toString(), "Некорректный рейтинг");
+                    log.error("Exception", new NotFoundException(buffer.getMpa().toString(), "Некорректный рейтинг"));
+                    throw new NotFoundException(buffer.getMpa().toString(), "Некорректный рейтинг");
                 } else {
-                    List<Long> genres = buffer.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
-                    for (Long g : genres) {
-                        if (!(g > 0 && g < 7)) {
-                            log.error("Exception", new ConditionsNotMetException(g.toString(), "Некорректный жанр"));
-                            throw new ConditionsNotMetException(g.toString(), "Некорректный жанр");
-                        }
-                    }
+                    List<Long> genres;
+                    String sqlQuery;
                     SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName("film").usingGeneratedKeyColumns("id");
                     Long f = simpleJdbcInsert.executeAndReturnKey(buffer.toMapBuffer()).longValue();
-                    String sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
-                    for (Long g : genres) {
-                        jdbcTemplate.update(sqlQuery, f, g);
+                    if (!buffer.getGenres().equals(List.of("нет жанра"))) {
+                        genres = buffer.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
+                        for (Long g : genres) {
+                            if (!(g > 0 && g < 7)) {
+                                log.error("Exception", new NotFoundException(g.toString(), "Некорректный жанр"));
+                                throw new NotFoundException(g.toString(), "Некорректный жанр");
+                            }
+                        }
+                        sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
+                        for (Long g : genres) {
+                            jdbcTemplate.update(sqlQuery, f, g);
+                        }
                     }
                     sqlQuery = "update film set " + "ratingId = ? " + "where id = ?";
                     jdbcTemplate.update(sqlQuery, buffer.getMpa(), f);
@@ -209,24 +213,26 @@ public class FilmDbStorage implements FilmStorage {
                             } else {
                                 oldFilm.setDuration(newFilm.getDuration());
                                 if (!(newFilm.getMpa() > 0 && newFilm.getMpa() < 6)) {
-                                    log.error("Exception", new ConditionsNotMetException(newFilm.getMpa().toString(), "Некорректный рейтинг"));
-                                    throw new ConditionsNotMetException(newFilm.getMpa().toString(), "Некорректный рейтинг");
+                                    log.error("Exception", new NotFoundException(newFilm.getMpa().toString(), "Некорректный рейтинг"));
+                                    throw new NotFoundException(newFilm.getMpa().toString(), "Некорректный рейтинг");
                                 }
-                                List<Long> genres = newFilm.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
-                                for (Long g : genres) {
-                                    if (!(g > 0 && g < 7)) {
-                                        log.error("Exception", new ConditionsNotMetException(g.toString(), "Некорректный жанр"));
-                                        throw new ConditionsNotMetException(g.toString(), "Некорректный жанр");
+                                if (!newFilm.getGenres().equals(List.of("нет жанра"))) {
+                                    List<Long> genres = newFilm.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
+                                    for (Long g : genres) {
+                                        if (!(g > 0 && g < 7)) {
+                                            log.error("Exception", new NotFoundException(g.toString(), "Некорректный жанр"));
+                                            throw new NotFoundException(g.toString(), "Некорректный жанр");
+                                        }
+                                    }
+                                    String sqlQuery = "delete from filmGenre where filmId = ?";
+                                    jdbcTemplate.update(sqlQuery, oldFilm.getId());
+                                    sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
+                                    for (Long g : genres) {
+                                        jdbcTemplate.update(sqlQuery, oldFilm.getId(), g);
                                     }
                                 }
                                 if (!oldFilm.getMpa().equals(newFilm.getMpa()) && newFilm.getMpa() > 0 && newFilm.getMpa() < 6)
                                     oldFilm.setMpa(Mpa.of(newFilm.getMpa()));
-                                String sqlQuery = "delete from filmGenre where filmId = ?";
-                                jdbcTemplate.update(sqlQuery, oldFilm.getId());
-                                sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
-                                for (Long g : genres) {
-                                    jdbcTemplate.update(sqlQuery, oldFilm.getId(), g);
-                                }
                                 String sqlQuery500 = "update film set " + "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + "where id = ?";
                                 jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa().getId(), oldFilm.getId());
                                 return findById(oldFilm.getId());
