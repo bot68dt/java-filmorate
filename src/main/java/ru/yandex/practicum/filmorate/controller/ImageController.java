@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.controller;
+/*package ru.yandex.practicum.filmorate.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.*;
@@ -36,4 +36,4 @@ public class ImageController {
 
         return new ResponseEntity<>(imageData.getData(), headers, HttpStatus.OK);
     }
-}
+}*/

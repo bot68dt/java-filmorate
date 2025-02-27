@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(of = {"id"})
 @AllArgsConstructor(staticName = "of")
-public class Genre {
-    Long id;
-    String name;
+public class GenreConstant {
+    private Long id;
+    private String name;
 }

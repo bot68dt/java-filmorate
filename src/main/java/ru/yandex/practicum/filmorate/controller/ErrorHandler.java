@@ -45,4 +45,5 @@ public class ErrorHandler {
     public Map<String, String> handleMethodArguments(final MethodArgumentNotValidException e) {
         return Map.of("error", e.getParameter().toString());
     }
+
 }

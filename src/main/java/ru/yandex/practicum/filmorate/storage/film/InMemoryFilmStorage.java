@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage.film;
+/*package ru.yandex.practicum.filmorate.storage.film;
 
 import jakarta.validation.Valid;
 import lombok.NoArgsConstructor;
@@ -131,4 +131,4 @@ public class InMemoryFilmStorage implements FilmStorage {
             throw new NotFoundException(newFilm.getId().toString(), "Фильм с указанным id не найден");
         }
     }
-}
+}*/
