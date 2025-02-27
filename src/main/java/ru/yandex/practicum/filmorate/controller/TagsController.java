@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.GenreConstant;
 import ru.yandex.practicum.filmorate.model.MpaConstant;
 import ru.yandex.practicum.filmorate.service.FilmInterface;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -34,12 +35,12 @@ public class TagsController {
     }
 
     @GetMapping("/genres")
-    public Map<Long, Set<Long>> viewGenre() throws NotFoundException {
+    public List<GenreConstant> viewGenre() throws NotFoundException {
         return filmInterface.viewGenre();
     }
 
     @GetMapping("/genres/{id}")
-    public Map<Long, String> viewGenreName(@PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException {
+    public GenreConstant viewGenreName(@PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException {
         return filmInterface.viewGenreName(id);
     }
 

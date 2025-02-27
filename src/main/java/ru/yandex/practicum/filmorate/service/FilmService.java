@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.GenreConstant;
 import ru.yandex.practicum.filmorate.model.MpaConstant;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -97,14 +98,14 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public Map<Long, Set<Long>> viewGenre() throws NotFoundException {
+    public List<GenreConstant> viewGenre() throws NotFoundException {
         log.info("Обработка Get-запроса...");
-        String sqlQuery3 = "select filmId, genreId from filmGenre where genreid IS NOT NULL";
-        Map<Long, Set<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmDbStorage.FilmGenreExtractor());
-        if (filmGenre == null) {
-            log.error("Exception", new NotFoundException("NULL", "Список фильмов с жанрами пуст."));
-            throw new NotFoundException("NULL", "Список фильмов с жанрами пуст.");
-        } else return filmGenre;
+        String sqlQuery3 = "select id, name from genre";
+        Map<Long, String> genre = jdbcTemplate.query(sqlQuery3, new GenreExtractor());
+        List<GenreConstant> genreConstant = new ArrayList<>();
+        for (Long l : genre.keySet())
+            genreConstant.add(GenreConstant.of(l, genre.get(l)));
+        return genreConstant;
     }
 
     public static class GenreExtractor implements ResultSetExtractor<Map<Long, String>> {
@@ -121,14 +122,14 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public Map<Long, String> viewGenreName(Long id) throws NotFoundException {
+    public GenreConstant viewGenreName(Long id) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         String sqlQuery3 = "select id, name from genre where id = ?";
         Map<Long, String> genre = jdbcTemplate.query(sqlQuery3, new GenreExtractor(), id);
-        if (genre == null) {
+        if (id < 0 || id > 7) {
             log.error("Exception", new NotFoundException("NULL", "Жанра с указанным идентификатором не существует."));
             throw new NotFoundException("NULL", "Жанра с указанным идентификатором не существует.");
-        } else return genre;
+        } else return GenreConstant.of(id, genre.get(id));
     }
 
     public static class RatingExtractor implements ResultSetExtractor<Map<Long, Long>> {
@@ -173,7 +174,7 @@ public class FilmService implements FilmInterface {
         log.info("Обработка Get-запроса...");
         String sqlQuery3 = "select id, rating from filmrating where id = ?";
         Map<Long, String> genre = jdbcTemplate.query(sqlQuery3, new RatingNameExtractor(), id);
-        if (id < 0 || id > genre.size()) {
+        if (id < 0 || id > 6) {
             log.error("Exception", new NotFoundException("NULL", "Рейтинг с указанным идентификатором не существует."));
             throw new NotFoundException("NULL", "Рейтинг с указанным идентификатором не существует.");
         } else return MpaConstant.of(id, genre.get(id));
