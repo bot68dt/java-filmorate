@@ -191,7 +191,7 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     @Override
-    public Film update(@Valid Buffer newFilm) throws ConditionsNotMetException, NotFoundException {
+    public FilmRequest update(@Valid Buffer newFilm) throws ConditionsNotMetException, NotFoundException {
         log.info("Обработка Put-запроса...");
         if (newFilm.getId() == null) {
             log.error("Exception", new ConditionsNotMetException("NULL", "Id должен быть указан"));
@@ -220,6 +220,7 @@ public class FilmDbStorage implements FilmStorage {
                                     log.error("Exception", new NotFoundException(newFilm.getMpa().toString(), "Некорректный рейтинг"));
                                     throw new NotFoundException(newFilm.getMpa().toString(), "Некорректный рейтинг");
                                 }
+                                LinkedHashSet<Genre> genres1 = new LinkedHashSet<>();
                                 if (!newFilm.getGenres().equals(List.of("нет жанра"))) {
                                     List<Long> genres = newFilm.getGenres().stream().map(item -> Long.parseLong(item)).collect(Collectors.toList());
                                     for (Long g : genres) {
@@ -233,13 +234,14 @@ public class FilmDbStorage implements FilmStorage {
                                     sqlQuery = "insert into filmGenre(filmId, genreId) " + "values (?, ?)";
                                     for (Long g : genres) {
                                         jdbcTemplate.update(sqlQuery, oldFilm.getId(), g);
+                                        genres1.add(Genre.of(g));
                                     }
                                 }
                                 if (!oldFilm.getMpa().equals(newFilm.getMpa()) && newFilm.getMpa() > 0 && newFilm.getMpa() < 6)
                                     oldFilm.setMpa(newFilm.getMpa());
                                 String sqlQuery500 = "update film set " + "name = ?, description = ?, releaseDate = ?, duration = ?, ratingId = ? " + "where id = ?";
                                 jdbcTemplate.update(sqlQuery500, oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), oldFilm.getMpa(), oldFilm.getId());
-                                return findById(oldFilm.getId());
+                                return FilmRequest.of(oldFilm.getId(), oldFilm.getName(), oldFilm.getDescription(), oldFilm.getReleaseDate(), oldFilm.getDuration(), new HashSet<>(), Mpa.of(oldFilm.getMpa()),genres1);
                             }
                         } else {
                             log.error("Exception", new NullPointerException("Продолжительность фильма не может быть нулевой"));

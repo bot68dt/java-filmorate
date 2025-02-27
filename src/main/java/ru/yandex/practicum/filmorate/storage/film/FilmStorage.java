@@ -14,5 +14,5 @@ public interface FilmStorage {
 
     public FilmRequest create(Buffer film);
 
-    public Film update(Buffer newFilm);
+    public FilmRequest update(Buffer newFilm);
 }

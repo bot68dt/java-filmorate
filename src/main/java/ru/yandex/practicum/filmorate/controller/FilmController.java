@@ -69,7 +69,7 @@ public class FilmController {
     }
 
     @PutMapping
-    public Film update(@Valid @RequestBody ObjectNode objectNode) throws ConditionsNotMetException, NotFoundException {
+    public FilmRequest update(@Valid @RequestBody ObjectNode objectNode) throws ConditionsNotMetException, NotFoundException {
         Long id = objectNode.get("id").asLong();
         String name = objectNode.get("name").asText();
         String description = objectNode.get("description").asText();
