@@ -20,7 +20,7 @@ public interface FilmInterface {
 
     Map<Long, String> viewGenreName(Long id) throws NotFoundException;
 
-    List<Film> viewFilmsRating() throws NotFoundException;
+    List<MpaConstant> viewFilmsRating() throws NotFoundException;
 
     MpaConstant viewRatingName(Long id) throws NotFoundException;
 }

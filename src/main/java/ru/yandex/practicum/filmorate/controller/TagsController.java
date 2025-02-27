@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MpaConstant;
 import ru.yandex.practicum.filmorate.service.FilmInterface;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
@@ -45,7 +44,7 @@ public class TagsController {
     }
 
     @GetMapping("/mpa")
-    public List<Film> viewRating() throws NotFoundException {
+    public List<MpaConstant> viewRating() throws NotFoundException {
         return filmInterface.viewFilmsRating();
     }
 

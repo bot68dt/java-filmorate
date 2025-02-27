@@ -145,19 +145,14 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public List<Film> viewFilmsRating() throws NotFoundException {
+    public List<MpaConstant> viewFilmsRating() throws NotFoundException {
         log.info("Обработка Get-запроса...");
-        String sqlQuery3 = "select id, ratingId from film where ratingId IS NOT NULL";
-        Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new RatingExtractor());
-        if (filmRating.isEmpty()) {
-            log.error("Exception", new NotFoundException("NULL", "Список фильмов с рейтингом пуст."));
-            throw new NotFoundException("NULL", "Список фильмов с рейтингом пуст.");
-        } else {
-            List<Film> films = new ArrayList<>();
-            for (Long l : filmRating.keySet())
-                films.add(filmStorage.findById(l));
-            return films;
-        }
+        String sqlQuery3 = "select id, rating from filmrating";
+        Map<Long, String> genre = jdbcTemplate.query(sqlQuery3, new RatingNameExtractor());
+            List<MpaConstant> mpaConstant = new ArrayList<>();
+            for (Long l : genre.keySet())
+                mpaConstant.add(MpaConstant.of(l, genre.get(l)));
+            return mpaConstant;
     }
 
     public static class RatingNameExtractor implements ResultSetExtractor<Map<Long, String>> {
@@ -178,7 +173,7 @@ public class FilmService implements FilmInterface {
         log.info("Обработка Get-запроса...");
         String sqlQuery3 = "select id, rating from filmrating where id = ?";
         Map<Long, String> genre = jdbcTemplate.query(sqlQuery3, new RatingNameExtractor(), id);
-        if (genre == null) {
+        if (id < 0 || id > genre.size()) {
             log.error("Exception", new NotFoundException("NULL", "Рейтинг с указанным идентификатором не существует."));
             throw new NotFoundException("NULL", "Рейтинг с указанным идентификатором не существует.");
         } else return MpaConstant.of(id, genre.get(id));

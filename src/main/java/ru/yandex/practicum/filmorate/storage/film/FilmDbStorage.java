@@ -99,8 +99,8 @@ public class FilmDbStorage implements FilmStorage {
             LinkedHashSet<Genre> genres = new LinkedHashSet<>();
             for (Long g : filmGenre.get(film.getId()))
                 genres.add(Genre.of(g));
-            film.setGenres(genres);
-            film.setMpa(Mpa.of(filmRating.get(film.getId())));
+            //film.setGenres(genres);
+            //film.setMpa(Mpa.of(filmRating.get(film.getId())));
         }
         return films;
     }
