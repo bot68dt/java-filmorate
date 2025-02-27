@@ -59,7 +59,7 @@ public class FilmService implements FilmInterface {
                 jdbcTemplate.update(sqlQuery, idFilm, idUser);
             }
         }
-        Film film = filmStorage.findById(idFilm);
+        FilmRequest film = filmStorage.findById(idFilm);
         String sqlQuery3 = "select filmId, genreId from filmGenre where filmId = ?";
         LinkedHashSet genres = new LinkedHashSet<>();
         Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmDbStorage.FilmGenreExtractor(), film.getId());
@@ -67,7 +67,7 @@ public class FilmService implements FilmInterface {
             for (Long g : filmGenre.get(film.getId()))
                 genres.add(g);
         }
-        return FilmRequest.of(film.getId(), film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), new HashSet<>(), Mpa.of(film.getMpa()), genres);
+        return FilmRequest.of(film.getId(), film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), new HashSet<>(), film.getMpa(), genres);
     }
 
     @Override
@@ -84,7 +84,7 @@ public class FilmService implements FilmInterface {
                 jdbcTemplate.update(sqlQuery, idFilm, idUser);
             }
         }
-        Film film = filmStorage.findById(idFilm);
+        FilmRequest film = filmStorage.findById(idFilm);
         String sqlQuery3 = "select filmId, genreId from filmGenre where filmId = ?";
         LinkedHashSet genres = new LinkedHashSet<>();
         Map<Long, LinkedHashSet<Long>> filmGenre = jdbcTemplate.query(sqlQuery3, new FilmDbStorage.FilmGenreExtractor(), film.getId());
@@ -92,7 +92,7 @@ public class FilmService implements FilmInterface {
             for (Long g : filmGenre.get(film.getId()))
                 genres.add(g);
         }
-        return FilmRequest.of(film.getId(), film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), new HashSet<>(), Mpa.of(film.getMpa()), genres);
+        return FilmRequest.of(film.getId(), film.getName(), film.getDescription(), film.getReleaseDate(), film.getDuration(), new HashSet<>(), film.getMpa(), genres);
     }
 
     @Override
@@ -113,7 +113,7 @@ public class FilmService implements FilmInterface {
                     for (Long g : filmGenre.get(filmStorage.findById(l).getId()))
                         genres.add(g);
                 }
-                films.add(FilmRequest.of(filmStorage.findById(l).getId(), filmStorage.findById(l).getName(), filmStorage.findById(l).getDescription(), filmStorage.findById(l).getReleaseDate(), filmStorage.findById(l).getDuration(), new HashSet<>(), Mpa.of(filmStorage.findById(l).getMpa()), genres));
+                films.add(FilmRequest.of(filmStorage.findById(l).getId(), filmStorage.findById(l).getName(), filmStorage.findById(l).getDescription(), filmStorage.findById(l).getReleaseDate(), filmStorage.findById(l).getDuration(), new HashSet<>(), filmStorage.findById(l).getMpa(), genres));
             }
         }
         return films;
