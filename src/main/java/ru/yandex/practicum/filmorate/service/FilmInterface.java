@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmRequest;
 import ru.yandex.practicum.filmorate.model.GenreConstant;
 import ru.yandex.practicum.filmorate.model.MpaConstant;
 
@@ -9,11 +9,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 public interface FilmInterface {
-    Film addLike(Long idUser, Long idFilm);
+    FilmRequest addLike(Long idUser, Long idFilm);
 
-    Film delLike(Long idUser, Long idFilm);
+    FilmRequest delLike(Long idUser, Long idFilm);
 
-    LinkedHashSet<Film> viewRating(Long count);
+    LinkedHashSet<FilmRequest> viewRating(Long count);
 
     List<GenreConstant> viewGenre() throws NotFoundException;
 

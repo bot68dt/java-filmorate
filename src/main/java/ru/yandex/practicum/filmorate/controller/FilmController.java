@@ -46,7 +46,7 @@ public class FilmController {
     }
 
     @GetMapping("/{id}")
-    public Film findById(@PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException {
+    public FilmRequest findById(@PathVariable("id") Long id) throws ConditionsNotMetException, NotFoundException {
         return filmStorage.findById(id);
     }
 
@@ -87,17 +87,17 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public Film addLike(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("userId") Long userId) throws ConditionsNotMetException {
+    public FilmRequest addLike(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("userId") Long userId) throws ConditionsNotMetException {
         return filmInterface.addLike(userId, id);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public Film delLike(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("userId") Long userId) throws NotFoundException {
+    public FilmRequest delLike(@Valid @RequestBody @PathVariable("id") Long id, @PathVariable("userId") Long userId) throws NotFoundException {
         return filmInterface.delLike(userId, id);
     }
 
     @GetMapping("/popular")
-    public LinkedHashSet<Film> viewRaiting(@RequestParam(required = false) Long count) throws NotFoundException {
+    public LinkedHashSet<FilmRequest> viewRaiting(@RequestParam(required = false) Long count) throws NotFoundException {
         return filmInterface.viewRating(count);
     }
 }

@@ -10,7 +10,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.FilmRequest;
 import ru.yandex.practicum.filmorate.model.GenreConstant;
 import ru.yandex.practicum.filmorate.model.MpaConstant;
 import ru.yandex.practicum.filmorate.storage.film.FilmDbStorage;
@@ -48,7 +48,7 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public Film addLike(Long idUser, Long idFilm) throws ConditionsNotMetException {
+    public FilmRequest addLike(Long idUser, Long idFilm) throws ConditionsNotMetException {
         log.info("Обработка Post-запроса...");
         if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
             String sqlQuery2 = "select filmId, userId from likedUsers";
@@ -65,7 +65,7 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public Film delLike(Long idUser, Long idFilm) throws ConditionsNotMetException {
+    public FilmRequest delLike(Long idUser, Long idFilm) throws ConditionsNotMetException {
         log.info("Обработка Del-запроса...");
         if (userStorage.findById(idUser) != null && filmStorage.findById(idFilm) != null) {
             String sqlQuery2 = "select filmId, userId from likedUsers";
@@ -82,11 +82,11 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public LinkedHashSet<Film> viewRating(Long count) throws NotFoundException {
+    public LinkedHashSet<FilmRequest> viewRating(Long count) throws NotFoundException {
         log.info("Обработка Get-запроса...");
         String sqlQuery2 = "select f.id as name, COUNT(l.userId) as coun from likedUsers as l LEFT OUTER JOIN film AS f ON l.filmId = f.id GROUP BY f.name ORDER BY COUNT(l.userId) DESC LIMIT 10";
         LinkedHashMap<Long, Long> likedUsers = jdbcTemplate.query(sqlQuery2, new TopLikedUsersExtractor());
-        LinkedHashSet<Film> films = new LinkedHashSet<>();
+        LinkedHashSet<FilmRequest> films = new LinkedHashSet<>();
         if (likedUsers == null) {
             log.error("Exception", new NotFoundException(count.toString(), "Список фильмов с рейтингом пуст."));
             throw new NotFoundException(count.toString(), "Список фильмов с рейтингом пуст.");

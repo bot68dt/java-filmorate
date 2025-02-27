@@ -10,7 +10,7 @@ public interface FilmStorage {
 
     public List<Film> findAll();
 
-    public Film findById(Long id);
+    public FilmRequest findById(Long id);
 
     public FilmRequest create(Buffer film);
 
