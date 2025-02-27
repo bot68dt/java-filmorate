@@ -102,7 +102,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public FilmRequest findById(Long id) throws ConditionsNotMetException, NotFoundException {
         log.info("Обработка Get-запроса...");
-        if (id != 0 || !id.equals(null)) {
+        if (id != 0 && !id.equals(null)) {
             try {
                 jdbcTemplate.queryForObject("select id, name, description, releaseDate, duration from film where id = ?", this::mapRowToFilm, id);
             } catch (DataAccessException e) {

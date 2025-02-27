@@ -77,7 +77,7 @@ public class UserDbStorage implements UserStorage {
 
     public User findById(Long id) throws ConditionsNotMetException {
         log.info("Обработка Get-запроса...");
-        if (id != 0 || !id.equals(null)) {
+        if (id != 0 && !id.equals(null)) {
             try {
                 jdbcTemplate.queryForObject("select id, name, email, login, birthday from users where id = ?", this::mapRowToUser, id);
             } catch (DataAccessException e) {
