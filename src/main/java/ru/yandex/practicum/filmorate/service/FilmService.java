@@ -32,12 +32,12 @@ public class FilmService implements FilmInterface {
     FilmStorage filmStorage;
     private final JdbcTemplate jdbcTemplate;
 
-    public static class TopLikedUsersExtractor implements ResultSetExtractor<LinkedHashMap<String, Long>> {
+    public static class TopLikedUsersExtractor implements ResultSetExtractor<LinkedHashMap<Long, Long>> {
         @Override
-        public LinkedHashMap<String, Long> extractData(ResultSet rs) throws SQLException {
-            LinkedHashMap<String, Long> data = new LinkedHashMap<>();
+        public LinkedHashMap<Long, Long> extractData(ResultSet rs) throws SQLException {
+            LinkedHashMap<Long, Long> data = new LinkedHashMap<>();
             while (rs.next()) {
-                String filmId = rs.getString("name");
+                Long filmId = rs.getLong("name");
                 Long likes = rs.getLong("coun");
                 data.putIfAbsent(filmId, likes);
             }
@@ -80,14 +80,19 @@ public class FilmService implements FilmInterface {
     }
 
     @Override
-    public LinkedHashMap<String, Long> viewRating(Long count) throws NotFoundException {
+    public LinkedHashSet<Film> viewRating(Long count) throws NotFoundException {
         log.info("Обработка Get-запроса...");
-        String sqlQuery2 = "select f.name as name, COUNT(l.userId) as coun from likedUsers as l LEFT OUTER JOIN film AS f ON l.filmId = f.id GROUP BY f.name ORDER BY COUNT(l.userId) DESC LIMIT 10";
-        LinkedHashMap<String, Long> likedUsers = jdbcTemplate.query(sqlQuery2, new TopLikedUsersExtractor());
+        String sqlQuery2 = "select f.id as name, COUNT(l.userId) as coun from likedUsers as l LEFT OUTER JOIN film AS f ON l.filmId = f.id GROUP BY f.name ORDER BY COUNT(l.userId) DESC LIMIT 10";
+        LinkedHashMap<Long, Long> likedUsers = jdbcTemplate.query(sqlQuery2, new TopLikedUsersExtractor());
+        LinkedHashSet<Film> films = new LinkedHashSet<>();
         if (likedUsers == null) {
             log.error("Exception", new NotFoundException(count.toString(), "Список фильмов с рейтингом пуст."));
             throw new NotFoundException(count.toString(), "Список фильмов с рейтингом пуст.");
-        } else return likedUsers;
+        } else {
+            for (Long l : likedUsers.keySet())
+                films.add(filmStorage.findById(l));
+        }
+        return films;
     }
 
     @Override

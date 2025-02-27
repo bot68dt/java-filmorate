@@ -96,7 +96,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Map<String, Long> viewRaiting(@RequestParam(required = false) Long count) throws NotFoundException {
+    public LinkedHashSet<Film> viewRaiting(@RequestParam(required = false) Long count) throws NotFoundException {
         return filmInterface.viewRating(count);
     }
 
