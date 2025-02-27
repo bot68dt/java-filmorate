@@ -126,9 +126,11 @@ public class FilmDbStorage implements FilmStorage {
             Map<Long, Long> filmRating = jdbcTemplate.query(sqlQuery3, new FilmRatingExtractor(), id);
             film.setLikedUsers(likedUsers.get(id));
             LinkedHashSet<Genre> genres = new LinkedHashSet<>();
-            for (Long g : filmGenre.get(id))
-                genres.add(Genre.of(g));
-            film.setGenres(genres);
+            if (!filmGenre.isEmpty()) {
+                for (Long g : filmGenre.get(id))
+                    genres.add(Genre.of(g));
+                film.setGenres(genres);
+            }
             film.setMpa(Mpa.of(filmRating.get(id)));
             return film;
         } else {
