@@ -177,7 +177,7 @@ public class FilmDbStorage implements FilmStorage {
                     sqlQuery = "update film set " + "ratingId = ? " + "where id = ?";
                     jdbcTemplate.update(sqlQuery, buffer.getMpa(), f);
 
-                    FilmRequest film = FilmRequest.of(buffer.getId(), buffer.getName(), buffer.getDescription(), buffer.getReleaseDate(), buffer.getDuration(), new HashSet<>(), Mpa.of(buffer.getMpa()), genres1);
+                    FilmRequest film = FilmRequest.of(f, buffer.getName(), buffer.getDescription(), buffer.getReleaseDate(), buffer.getDuration(), new HashSet<>(), Mpa.of(buffer.getMpa()), genres1);
                     return film;
                 }
             } else {
